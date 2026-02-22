@@ -7,7 +7,7 @@ import java.time.Instant;
  * Ticket entity representing a support ticket in the system.
  */
 @Entity
-@Table(name = "tickets")
+@Table(name = "ticket")
 public class Ticket {
 
     @Id

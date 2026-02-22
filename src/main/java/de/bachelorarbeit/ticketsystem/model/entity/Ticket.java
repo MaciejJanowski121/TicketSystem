@@ -49,10 +49,10 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(String title, String description, TicketState ticketState, TicketCategory category, UserAccount endUser) {
+    public Ticket(String title, String description, TicketCategory category, UserAccount endUser) {
         this.title = title;
         this.description = description;
-        this.ticketState = ticketState;
+        this.ticketState = TicketState.UNASSIGNED;
         this.ticketCategory = category;
         this.endUser = endUser;
         this.createDate = Instant.now();

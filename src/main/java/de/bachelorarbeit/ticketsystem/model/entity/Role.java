@@ -5,7 +5,7 @@ package de.bachelorarbeit.ticketsystem.model.entity;
  * Used for authorization and access control.
  */
 public enum Role {
-    END_USER,
-    SUPPORT_USER,
-    ADMIN_USER
+    ENDUSER,
+    SUPPORTUSER,
+    ADMINUSER
 }

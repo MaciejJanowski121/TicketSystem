@@ -54,19 +54,19 @@ public class AuthService {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        // Create new user with END_USER role
+        // Create new user with ENDUSER role
         UserAccount user = new UserAccount(
                 username,
                 email,
                 passwordEncoder.encode(password),
-                Role.END_USER
+                Role.ENDUSER
         );
 
         // Save user
         userRepository.save(user);
 
         // Generate JWT token
-        return jwtService.generateToken(user, email, Role.END_USER);
+        return jwtService.generateToken(user, email, Role.ENDUSER);
     }
 
     /**

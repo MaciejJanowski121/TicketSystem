@@ -39,7 +39,7 @@ public class UserAccount implements UserDetails {
         this.username = username;
         this.mail = mail;
         this.passwordHash = passwordHash;
-        this.role = Role.END_USER;
+        this.role = Role.ENDUSER;
     }
 
     public UserAccount(String username, String mail, String passwordHash, Role role) {

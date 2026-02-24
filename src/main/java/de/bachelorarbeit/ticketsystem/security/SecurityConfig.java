@@ -17,6 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 /**
  * Configuration for Spring Security.
@@ -44,9 +49,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/auth/register").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/support/**").hasAnyRole("SUPPORT", "ADMIN")
                 .requestMatchers("/user/**").authenticated()
@@ -105,5 +111,33 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Configure CORS settings.
+     *
+     * @return the CorsConfigurationSource
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Allow the Vite frontend origin
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+
+        // Allow specified HTTP methods
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        // Allow necessary headers
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        // Allow credentials (for JWT tokens)
+        configuration.setAllowCredentials(true);
+
+        // Apply CORS configuration to all endpoints
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }

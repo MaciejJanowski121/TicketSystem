@@ -1,6 +1,9 @@
 package de.bachelorarbeit.ticketsystem.controller;
 
+import de.bachelorarbeit.ticketsystem.dto.LoginRequest;
+import de.bachelorarbeit.ticketsystem.dto.RegisterRequest;
 import de.bachelorarbeit.ticketsystem.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +15,7 @@ import java.util.Map;
  * Controller for authentication endpoints.
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -24,78 +27,34 @@ public class AuthController {
     /**
      * Register a new user.
      *
-     * @param requestBody the request body containing username, email, and password
-     * @return JWT token for the registered user
+     * @param registerRequest the request body containing username, email, and password
+     * @return success message
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> requestBody) {
-        try {
-            String username = requestBody.get("username");
-            String email = requestBody.get("email");
-            String password = requestBody.get("password");
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        // Register user (we don't need the token for registration response)
+        authService.register(registerRequest.getUsername(), registerRequest.getEmail(), registerRequest.getPassword());
 
-            // Validate input
-            if (username == null || email == null || password == null) {
-                return ResponseEntity.badRequest().body("Username, email, and password are required");
-            }
-
-            // Register user
-            String token = authService.register(username, email, password);
-
-            // Return token
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Registration failed: " + e.getMessage());
-        }
+        // Return success message
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User registered successfully");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
      * Login a user.
-     * Accepts either request parameters or JSON body.
      *
-     * @param login the username or email (from request parameter)
-     * @param password the password (from request parameter)
-     * @param requestBody the request body containing login and password (alternative to request parameters)
+     * @param request the request body containing login and password
      * @return JWT token for the authenticated user
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestParam(required = false) String login,
-            @RequestParam(required = false) String password,
-            @RequestBody(required = false) Map<String, String> requestBody
-    ) {
-        try {
-            // Get login and password from request parameters or request body
-            String loginValue = login;
-            String passwordValue = password;
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request) {
+        // Login user
+        String token = authService.login(request.getLogin(), request.getPassword());
 
-            if (loginValue == null || passwordValue == null) {
-                if (requestBody != null) {
-                    loginValue = requestBody.get("login");
-                    passwordValue = requestBody.get("password");
-                }
-            }
-
-            // Validate input
-            if (loginValue == null || passwordValue == null) {
-                return ResponseEntity.badRequest().body("Login and password are required");
-            }
-
-            // Login user
-            String token = authService.login(loginValue, passwordValue);
-
-            // Return token
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
-        }
+        // Return token
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        return ResponseEntity.ok(response);
     }
 }

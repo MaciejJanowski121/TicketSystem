@@ -97,4 +97,39 @@ public class AuthService {
         // Generate JWT token
         return jwtService.generateToken(user, user.getMail(), user.getRole());
     }
+
+    /**
+     * Change password for an authenticated user.
+     *
+     * @param username the username of the authenticated user
+     * @param currentPassword the current password
+     * @param newPassword the new password
+     * @param confirmPassword the password confirmation
+     * @throws IllegalArgumentException if current password is invalid or passwords don't match
+     */
+    @Transactional
+    public void changePassword(String username, String currentPassword, String newPassword, String confirmPassword) {
+        // Find user by username
+        UserAccount user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Validate current password
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid current password");
+        }
+
+        // Validate password confirmation
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+
+        // Optional: Check if new password is different from current password
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        // Hash and save new password
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }

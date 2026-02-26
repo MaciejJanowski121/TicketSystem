@@ -1,0 +1,7 @@
+/* Register page specific styles */
+/* Most styles are now handled by base.css */
+
+/* Placeholder styles */
+.form-group input::placeholder {
+  color: #9ca3af;
+}

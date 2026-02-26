@@ -63,4 +63,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * @return a page of unassigned tickets
      */
     Page<Ticket> findByAssignedSupportIsNull(Pageable pageable);
+
+    /**
+     * Find all tickets created by a specific end user, sorted by updateDate descending.
+     *
+     * @param endUser the end user
+     * @return a list of tickets created by the end user, sorted by updateDate descending
+     */
+    List<Ticket> findByEndUserOrderByUpdateDateDesc(UserAccount endUser);
 }

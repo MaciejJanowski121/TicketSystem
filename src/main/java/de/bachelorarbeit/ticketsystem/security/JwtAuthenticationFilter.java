@@ -37,6 +37,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        // Bypass OPTIONS requests (CORS preflight)
+        if ("OPTIONS".equals(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Bypass public authentication endpoints
+        String requestPath = request.getRequestURI();
+        if (requestPath.startsWith("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;
@@ -49,16 +62,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extract JWT token from Authorization header
         jwt = authHeader.substring(7);
-        
+
         try {
             // Extract username from JWT token
             username = jwtService.extractUsername(jwt);
-            
+
             // If username is present and no authentication is set up yet
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Load user details from database
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                
+
                 // Validate JWT token
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     // Create authentication token
@@ -67,12 +80,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             null,
                             userDetails.getAuthorities()
                     );
-                    
+
                     // Set authentication details
                     authToken.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
-                    
+
                     // Set authentication in security context
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
@@ -81,7 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Log exception but don't throw it to allow the request to proceed
             logger.error("JWT authentication failed: " + e.getMessage());
         }
-        
+
         // Continue filter chain
         filterChain.doFilter(request, response);
     }

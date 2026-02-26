@@ -116,6 +116,19 @@ public class UserAccount implements UserDetails {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserAccount that = (UserAccount) o;
+        return mail != null && mail.equals(that.mail);
+    }
+
+    @Override
+    public int hashCode() {
+        return mail != null ? mail.hashCode() : 0;
+    }
+
+    @Override
     public String toString() {
         return "User{" +
                 "mail=" + mail +

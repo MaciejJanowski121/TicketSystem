@@ -89,9 +89,9 @@ public class AuthService {
                     .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + login));
         }
 
-        // Authenticate user
+        // Authenticate user - use the original login parameter for authentication
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), password)
+                new UsernamePasswordAuthenticationToken(login, password)
         );
 
         // Generate JWT token

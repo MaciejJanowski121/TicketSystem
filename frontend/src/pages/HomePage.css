@@ -1,0 +1,80 @@
+/* Home page specific styles */
+.home-hero {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.hero-subtitle {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin-bottom: 0;
+}
+
+/* Features grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature-card {
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.feature-card h3 {
+  color: #2563eb;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.feature-card p {
+  color: #6b7280;
+  font-size: 1rem;
+  margin-bottom: 0;
+  line-height: 1.6;
+}
+
+/* Responsive design for HomePage */
+@media (max-width: 768px) {
+  .home-hero {
+    margin-bottom: 3rem;
+  }
+
+  .hero-description {
+    font-size: 1.125rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-hero {
+    margin-bottom: 2rem;
+  }
+
+  .features-grid {
+    gap: 1rem;
+  }
+}

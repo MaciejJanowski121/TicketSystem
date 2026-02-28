@@ -8,7 +8,7 @@ import java.util.Objects;
 
 /**
  * Embeddable composite key for TicketComment entity.
- * Consists of ticketId, commentEmail, and commentDate.
+ * Consists of ticketId, commentUserMail, and commentDate.
  */
 @Embeddable
 public class TicketCommentPk implements Serializable {
@@ -16,7 +16,7 @@ public class TicketCommentPk implements Serializable {
     @Column(name = "ticket_id")
     private Long ticketId;
     @Column(name = "comment_email")
-    private String commentEmail;
+    private String commentUserMail;
     @Column(name = "comment_date")
     private Instant commentDate;
 
@@ -24,9 +24,9 @@ public class TicketCommentPk implements Serializable {
     public TicketCommentPk() {
     }
 
-    public TicketCommentPk(Long ticketId, String commentEmail, Instant commentDate) {
+    public TicketCommentPk(Long ticketId, String commentUserMail, Instant commentDate) {
         this.ticketId = ticketId;
-        this.commentEmail = commentEmail;
+        this.commentUserMail = commentUserMail;
         this.commentDate = commentDate;
     }
 
@@ -39,12 +39,12 @@ public class TicketCommentPk implements Serializable {
     }
 
 
-    public String getCommentEmail() {
-        return commentEmail;
+    public String getCommentUserMail() {
+        return commentUserMail;
     }
 
-    public void setCommentEmail(String commentEmail) {
-        this.commentEmail = commentEmail;
+    public void setCommentUserMail(String commentUserMail) {
+        this.commentUserMail = commentUserMail;
     }
 
     public Instant getCommentDate() {
@@ -61,20 +61,20 @@ public class TicketCommentPk implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         TicketCommentPk that = (TicketCommentPk) o;
         return Objects.equals(ticketId, that.ticketId) &&
-                Objects.equals(commentEmail, that.commentEmail) &&
+                Objects.equals(commentUserMail, that.commentUserMail) &&
                 Objects.equals(commentDate, that.commentDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ticketId, commentEmail, commentDate);
+        return Objects.hash(ticketId, commentUserMail, commentDate);
     }
 
     @Override
     public String toString() {
         return "TicketCommentId{" +
                 "ticketId=" + ticketId +
-                ", commentEmail='" + commentEmail + '\'' +
+                ", commentUserMail='" + commentUserMail + '\'' +
                 ", commentDate=" + commentDate +
                 '}';
     }

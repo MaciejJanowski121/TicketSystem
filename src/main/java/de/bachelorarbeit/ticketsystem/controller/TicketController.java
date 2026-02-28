@@ -1,6 +1,8 @@
 package de.bachelorarbeit.ticketsystem.controller;
 
+import de.bachelorarbeit.ticketsystem.dto.CreateCommentRequest;
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
+import de.bachelorarbeit.ticketsystem.dto.CommentResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
 import de.bachelorarbeit.ticketsystem.service.TicketService;
 import jakarta.validation.Valid;
@@ -66,5 +68,49 @@ public class TicketController {
                                                         Authentication authentication) {
         TicketResponse ticket = ticketService.getMyTicketById(ticketId, authentication);
         return ResponseEntity.ok(ticket);
+    }
+
+    /**
+     * Get all comments for a specific ticket.
+     *
+     * @param ticketId the ID of the ticket
+     * @param authentication the authentication object containing current user info
+     * @return list of comments for the ticket
+     */
+    @GetMapping("/{ticketId}/comments")
+    @PreAuthorize("hasRole('ENDUSER') or hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
+    public ResponseEntity<List<CommentResponse>> getTicketComments(@PathVariable Long ticketId,
+                                                                 Authentication authentication) {
+        try {
+            List<CommentResponse> comments = ticketService.getTicketComments(ticketId, authentication);
+            return ResponseEntity.ok(comments);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    /**
+     * Create a new comment on a ticket.
+     *
+     * @param ticketId the ID of the ticket
+     * @param request the comment creation request
+     * @param authentication the authentication object containing current user info
+     * @return the created comment response with 201 Created status
+     */
+    @PostMapping("/{ticketId}/comments")
+    @PreAuthorize("hasRole('ENDUSER') or hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
+    public ResponseEntity<CommentResponse> createTicketComment(@PathVariable Long ticketId,
+                                                             @Valid @RequestBody CreateCommentRequest request,
+                                                             Authentication authentication) {
+        try {
+            CommentResponse comment = ticketService.createTicketComment(ticketId, request, authentication);
+            return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
     }
 }

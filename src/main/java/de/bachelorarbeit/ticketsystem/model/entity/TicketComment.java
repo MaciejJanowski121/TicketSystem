@@ -19,8 +19,9 @@ public class TicketComment {
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
 
+    @MapsId("commentUserMail")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_user_mail", referencedColumnName = "mail", insertable = false, updatable = false)
+    @JoinColumn(name = "comment_email", referencedColumnName = "mail")
     private UserAccount commentUser;
 
     @Column(nullable = false)

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getToken, getAuthHeader, isLoggedIn } from '../utils/auth';
+import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
 import { normalizeComments } from '../utils/comments';
 import './TicketDetailsReadOnlyPage.css';
 
@@ -9,6 +9,10 @@ function TicketDetailsReadOnlyPage() {
   const [ticket, setTicket] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionLoading, setActionLoading] = useState({});
+  const [commentText, setCommentText] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [commentError, setCommentError] = useState('');
   const navigate = useNavigate();
 
   // Category display names
@@ -107,6 +111,82 @@ function TicketDetailsReadOnlyPage() {
       default:
         return '';
     }
+  };
+
+  const createComment = async (e) => {
+    e.preventDefault();
+
+    if (!commentText.trim()) {
+      setCommentError('Comment cannot be empty.');
+      return;
+    }
+
+    setCommentSubmitting(true);
+    setCommentError('');
+
+    try {
+      const token = getToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:8080/api/tickets/${ticketId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
+        body: JSON.stringify({
+          comment: commentText.trim()
+        })
+      });
+
+      if (response.ok) {
+        // Success - refresh ticket details and clear form
+        setCommentText('');
+        fetchTicketDetails();
+      } else if (response.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem('token');
+        window.dispatchEvent(new Event('authStateChange'));
+        navigate('/login');
+      } else if (response.status === 403) {
+        const errorData = await response.json();
+        setCommentError(errorData.message || 'Access denied: You cannot comment on this ticket.');
+      } else if (response.status === 404) {
+        setCommentError('Ticket not found.');
+      } else {
+        const errorData = await response.json();
+        setCommentError(errorData.message || 'Failed to create comment');
+      }
+    } catch (error) {
+      setCommentError('Network error. Please check your connection and try again.');
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const canComment = () => {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !ticket) return false;
+
+    // ENDUSER can comment on their own tickets
+    if (currentUser.role === 'ENDUSER' && ticket.creatorEmail === currentUser.email) {
+      return true;
+    }
+
+    // SUPPORTUSER can comment on tickets assigned to them
+    if (currentUser.role === 'SUPPORTUSER' && ticket.assignedSupport === currentUser.username) {
+      return true;
+    }
+
+    // ADMINUSER can comment on any ticket
+    if (currentUser.role === 'ADMINUSER') {
+      return true;
+    }
+
+    return false;
   };
 
   if (isLoading) {
@@ -234,6 +314,12 @@ function TicketDetailsReadOnlyPage() {
             <div className="ticket-detail-section">
               <h3>Comments</h3>
               <div className="comments-section">
+                {commentError && (
+                  <div className="message error">
+                    {commentError}
+                  </div>
+                )}
+
                 {!ticket.comments || ticket.comments.length === 0 ? (
                   <p className="no-comments">No comments yet.</p>
                 ) : (
@@ -256,6 +342,28 @@ function TicketDetailsReadOnlyPage() {
                         </div>
                       ))}
                   </div>
+                )}
+
+                {canComment() && (
+                  <form onSubmit={createComment} className="comment-form">
+                    <div className="form-group">
+                      <textarea
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Add a comment..."
+                        rows="4"
+                        className="comment-textarea"
+                        disabled={commentSubmitting}
+                      />
+                    </div>
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary"
+                      disabled={commentSubmitting || !commentText.trim()}
+                    >
+                      {commentSubmitting ? 'Adding Comment...' : 'Add Comment'}
+                    </button>
+                  </form>
                 )}
               </div>
             </div>

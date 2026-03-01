@@ -5,6 +5,9 @@ import de.bachelorarbeit.ticketsystem.model.entity.SupportTicketAssignmentPk;
 import de.bachelorarbeit.ticketsystem.model.entity.Ticket;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,12 +29,12 @@ public interface SupportTicketAssignmentRepository extends JpaRepository<Support
     Optional<SupportTicketAssignment> findByTicketAndSupportUser(Ticket ticket, UserAccount supportUser);
 
     /**
-     * Find all support ticket assignments for a specific ticket.
+     * Find the support ticket assignment for a specific ticket.
      *
      * @param ticket the ticket
-     * @return a list of support ticket assignments for the specified ticket
+     * @return an Optional containing the support ticket assignment if found, or empty if not found
      */
-    List<SupportTicketAssignment> findByTicket(Ticket ticket);
+    Optional<SupportTicketAssignment> findByTicket(Ticket ticket);
 
     /**
      * Find all support ticket assignments for a specific support user.
@@ -40,6 +43,14 @@ public interface SupportTicketAssignmentRepository extends JpaRepository<Support
      * @return a list of support ticket assignments for the specified support user
      */
     List<SupportTicketAssignment> findBySupportUser(UserAccount supportUser);
+
+    /**
+     * Check if a support ticket assignment exists for a specific ticket.
+     *
+     * @param ticket the ticket
+     * @return true if an assignment exists, false otherwise
+     */
+    boolean existsByTicket(Ticket ticket);
 
     /**
      * Delete all support ticket assignments for a specific ticket.
@@ -54,4 +65,5 @@ public interface SupportTicketAssignmentRepository extends JpaRepository<Support
      * @param supportUser the support user
      */
     void deleteBySupportUser(UserAccount supportUser);
+
 }

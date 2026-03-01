@@ -88,7 +88,7 @@ function Navbar() {
           >
             Home
           </NavLink>
-          {userLoggedIn && (
+          {userLoggedIn && userRole === 'ENDUSER' && (
             <NavLink 
               to="/my-tickets" 
               className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
@@ -104,12 +104,20 @@ function Navbar() {
               Create Ticket
             </NavLink>
           )}
-          {userLoggedIn && (
+          {userLoggedIn && userRole === 'ENDUSER' && (
             <NavLink 
               to="/tickets" 
               className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
             >
               Tickets
+            </NavLink>
+          )}
+          {userLoggedIn && (userRole === 'SUPPORTUSER' || userRole === 'ADMINUSER') && (
+            <NavLink 
+              to="/support/tickets" 
+              className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
+            >
+              Support Panel
             </NavLink>
           )}
         </div>

@@ -2,15 +2,18 @@ package de.bachelorarbeit.ticketsystem.service;
 
 import de.bachelorarbeit.ticketsystem.dto.CreateCommentRequest;
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
+import de.bachelorarbeit.ticketsystem.dto.SupportTicketUpdateRequest;
 import de.bachelorarbeit.ticketsystem.dto.TicketCommentResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
 import de.bachelorarbeit.ticketsystem.model.entity.Role;
+import de.bachelorarbeit.ticketsystem.model.entity.SupportTicketAssignment;
 import de.bachelorarbeit.ticketsystem.model.entity.Ticket;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketCategory;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketComment;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketState;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
+import de.bachelorarbeit.ticketsystem.repository.SupportTicketAssignmentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketCommentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketRepository;
 import de.bachelorarbeit.ticketsystem.repository.UserRepository;
@@ -32,12 +35,15 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final TicketCommentRepository ticketCommentRepository;
+    private final SupportTicketAssignmentRepository supportTicketAssignmentRepository;
 
     public TicketService(TicketRepository ticketRepository, UserRepository userRepository, 
-                        TicketCommentRepository ticketCommentRepository) {
+                        TicketCommentRepository ticketCommentRepository,
+                        SupportTicketAssignmentRepository supportTicketAssignmentRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.ticketCommentRepository = ticketCommentRepository;
+        this.supportTicketAssignmentRepository = supportTicketAssignmentRepository;
     }
 
     /**
@@ -395,10 +401,23 @@ public class TicketService {
 
         Ticket ticket = ticketOpt.get();
 
-        // Authorization: ENDUSER can only comment on own tickets, SUPPORTUSER and ADMINUSER can comment on any ticket
-        if (currentUser.getRole() == Role.ENDUSER && !ticket.getEndUser().equals(currentUser)) {
-            throw new SecurityException("Access denied: You cannot comment on this ticket.");
+        // Authorization logic:
+        // - ENDUSER can only comment on own tickets
+        // - SUPPORTUSER can only comment on tickets assigned to them
+        // - ADMINUSER can comment on any ticket
+        if (currentUser.getRole() == Role.ENDUSER) {
+            // End users can only comment on their own tickets
+            if (!ticket.getEndUser().equals(currentUser)) {
+                throw new SecurityException("Access denied: You cannot comment on this ticket.");
+            }
+        } else if (currentUser.getRole() == Role.SUPPORTUSER) {
+            // Support users can only comment on tickets assigned to them
+            Optional<SupportTicketAssignment> assignment = supportTicketAssignmentRepository.findByTicket(ticket);
+            if (assignment.isEmpty() || !assignment.get().getSupportUser().getMail().equals(currentUser.getMail())) {
+                throw new SecurityException("Access denied: You can only comment on tickets assigned to you.");
+            }
         }
+        // ADMINUSER has no restrictions - can comment on any ticket
 
         try {
             // Create and save the comment
@@ -465,5 +484,294 @@ public class TicketService {
                 ticket.getEndUser().getMail(),
                 ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null
         );
+    }
+
+    // ========== SUPPORT WORKFLOW METHODS ==========
+
+    /**
+     * Get tickets assigned to the current support user.
+     *
+     * @param search optional search term
+     * @param state optional state filter
+     * @param category optional category filter
+     * @param sort sort field (createDate or updateDate)
+     * @param direction sort direction (ASC or DESC)
+     * @param authentication the authentication object containing current user info
+     * @return list of tickets assigned to current support user
+     * @throws IllegalArgumentException if user not found or not authorized
+     */
+    @Transactional(readOnly = true)
+    public List<TicketListItemResponse> getMySupportTickets(String search, TicketState state, TicketCategory category,
+                                                           String sort, String direction, Authentication authentication) {
+        UserAccount currentUser = getCurrentUser(authentication);
+
+        // Verify user has SUPPORTUSER or ADMINUSER role
+        if (currentUser.getRole() != Role.SUPPORTUSER && currentUser.getRole() != Role.ADMINUSER) {
+            throw new IllegalArgumentException("Access denied: Only support users can access this endpoint");
+        }
+
+        // Instead of ticketRepository.findByAssignedSupport(...)
+        // Fetch assignments using assignmentRepository.findBySupportUser(currentUser)
+        List<SupportTicketAssignment> assignments = supportTicketAssignmentRepository.findBySupportUser(currentUser);
+
+        // Map assignments to tickets via assignment.getTicket()
+        List<Ticket> tickets = assignments.stream()
+                .map(SupportTicketAssignment::getTicket)
+                .collect(Collectors.toList());
+
+        // Apply filters if provided
+        if (search != null && !search.isBlank()) {
+            String searchLower = search.toLowerCase();
+            tickets = tickets.stream()
+                    .filter(ticket -> 
+                        ticket.getTitle().toLowerCase().contains(searchLower) ||
+                        ticket.getDescription().toLowerCase().contains(searchLower) ||
+                        (ticket.getEndUser().getUsername() != null && ticket.getEndUser().getUsername().toLowerCase().contains(searchLower))
+                    )
+                    .collect(Collectors.toList());
+        }
+
+        if (state != null) {
+            tickets = tickets.stream()
+                    .filter(ticket -> ticket.getTicketState() == state)
+                    .collect(Collectors.toList());
+        }
+
+        if (category != null) {
+            tickets = tickets.stream()
+                    .filter(ticket -> ticket.getTicketCategory() == category)
+                    .collect(Collectors.toList());
+        }
+
+        // Apply sorting
+        if (sort == null || (!sort.equals("createDate") && !sort.equals("updateDate"))) {
+            sort = "updateDate";
+        }
+        if (direction == null || (!direction.equals("ASC") && !direction.equals("DESC"))) {
+            direction = "DESC";
+        }
+
+        if ("createDate".equals(sort)) {
+            if ("ASC".equals(direction)) {
+                tickets.sort((a, b) -> a.getCreateDate().compareTo(b.getCreateDate()));
+            } else {
+                tickets.sort((a, b) -> b.getCreateDate().compareTo(a.getCreateDate()));
+            }
+        } else { // updateDate
+            if ("ASC".equals(direction)) {
+                tickets.sort((a, b) -> a.getUpdateDate().compareTo(b.getUpdateDate()));
+            } else {
+                tickets.sort((a, b) -> b.getUpdateDate().compareTo(a.getUpdateDate()));
+            }
+        }
+
+        return tickets.stream()
+                .map(this::mapToTicketListItemResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Assign a ticket to the current support user.
+     *
+     * @param ticketId the ID of the ticket to assign
+     * @param authentication the authentication object containing current user info
+     * @return the updated ticket response
+     * @throws IllegalArgumentException if ticket not found or already assigned
+     */
+    @Transactional
+    public TicketResponse assignTicketToCurrentSupport(Long ticketId, Authentication authentication) {
+        UserAccount currentUser = getCurrentUser(authentication);
+
+        // Verify user has SUPPORTUSER or ADMINUSER role
+        if (currentUser.getRole() != Role.SUPPORTUSER && currentUser.getRole() != Role.ADMINUSER) {
+            throw new IllegalArgumentException("Access denied: Only support users can assign tickets");
+        }
+
+        // Load ticket, if not found -> 404
+        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new IllegalArgumentException("Ticket not found");
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        // If ticket state is CLOSED -> return conflict
+        if (ticket.getTicketState() == TicketState.CLOSED) {
+            throw new IllegalArgumentException("Ticket is closed");
+        }
+
+        // Check if assignment already exists
+        if (supportTicketAssignmentRepository.existsByTicket(ticket)) {
+            // If SUPPORTUSER and assignment exists -> conflict "Ticket already assigned"
+            if (currentUser.getRole() == Role.SUPPORTUSER) {
+                throw new IllegalArgumentException("Ticket already assigned");
+            }
+            // If ADMINUSER and assignment exists -> delete existing assignment (takeover)
+            if (currentUser.getRole() == Role.ADMINUSER) {
+                supportTicketAssignmentRepository.deleteByTicket(ticket);
+            }
+        }
+
+        // Create new SupportTicketAssignment(ticket, currentUser)
+        SupportTicketAssignment newAssignment = new SupportTicketAssignment(ticket, currentUser);
+
+        // Save assignment
+        supportTicketAssignmentRepository.save(newAssignment);
+
+        // Update ticket:
+        // - set ticketState = IN_PROGRESS
+        // - set updateDate = now
+        // - set assignedSupport = currentUser (keep this as cache for DTO compatibility)
+        ticket.setTicketState(TicketState.IN_PROGRESS);
+        ticket.setUpdateDate(java.time.Instant.now());
+        ticket.setAssignedSupport(currentUser);
+
+        // Save ticket
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        // Return updated TicketResponse
+        return mapToTicketResponseWithAllDetails(savedTicket);
+    }
+
+    /**
+     * Release a ticket from the current support user.
+     *
+     * @param ticketId the ID of the ticket to release
+     * @param authentication the authentication object containing current user info
+     * @return the updated ticket response
+     * @throws IllegalArgumentException if ticket not found or not authorized
+     */
+    @Transactional
+    public TicketResponse releaseTicket(Long ticketId, Authentication authentication) {
+        UserAccount currentUser = getCurrentUser(authentication);
+
+        // Verify user has SUPPORTUSER or ADMINUSER role
+        if (currentUser.getRole() != Role.SUPPORTUSER && currentUser.getRole() != Role.ADMINUSER) {
+            throw new IllegalArgumentException("Access denied: Only support users can release tickets");
+        }
+
+        // Load ticket + assignment
+        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new IllegalArgumentException("Ticket not found");
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        // If no assignment exists -> conflict
+        Optional<SupportTicketAssignment> assignmentOpt = supportTicketAssignmentRepository.findByTicket(ticket);
+        if (assignmentOpt.isEmpty()) {
+            throw new IllegalArgumentException("Ticket is not assigned");
+        }
+
+        SupportTicketAssignment assignment = assignmentOpt.get();
+
+        // Allow release only if:
+        // - current user is assigned support OR
+        // - role is ADMINUSER
+        if (!assignment.getSupportUser().getMail().equals(currentUser.getMail()) && currentUser.getRole() != Role.ADMINUSER) {
+            throw new IllegalArgumentException("Access denied: You can only release tickets assigned to you");
+        }
+
+        // Delete assignment
+        supportTicketAssignmentRepository.deleteByTicket(ticket);
+
+        // Update ticket:
+        // - set ticketState = UNASSIGNED
+        // - set updateDate = now
+        // - set assignedSupport = null (keep cache consistent)
+        ticket.setTicketState(TicketState.UNASSIGNED);
+        ticket.setUpdateDate(java.time.Instant.now());
+        ticket.setAssignedSupport(null);
+
+        // Save ticket
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        // Return updated TicketResponse
+        return mapToTicketResponseWithAllDetails(savedTicket);
+    }
+
+    /**
+     * Update ticket status and/or category.
+     *
+     * @param ticketId the ID of the ticket to update
+     * @param request the update request containing optional state and category
+     * @param authentication the authentication object containing current user info
+     * @return the updated ticket response
+     * @throws IllegalArgumentException if ticket not found, not authorized, or invalid state transition
+     */
+    @Transactional
+    public TicketResponse updateSupportTicket(Long ticketId, SupportTicketUpdateRequest request, Authentication authentication) {
+        UserAccount currentUser = getCurrentUser(authentication);
+
+        // Verify user has SUPPORTUSER or ADMINUSER role
+        if (currentUser.getRole() != Role.SUPPORTUSER && currentUser.getRole() != Role.ADMINUSER) {
+            throw new IllegalArgumentException("Access denied: Only support users can update tickets");
+        }
+
+        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new IllegalArgumentException("Ticket not found");
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        // Load assignment by ticket
+        Optional<SupportTicketAssignment> assignmentOpt = supportTicketAssignmentRepository.findByTicket(ticket);
+
+        // Allow update only if assignment exists and matches current user OR role is ADMINUSER
+        if (assignmentOpt.isEmpty() || 
+            (!assignmentOpt.get().getSupportUser().getMail().equals(currentUser.getMail()) && currentUser.getRole() != Role.ADMINUSER)) {
+            throw new IllegalArgumentException("Access denied: You can only update tickets assigned to you");
+        }
+
+        boolean updated = false;
+
+        // Update ticket state if provided
+        if (request.getTicketState() != null) {
+            TicketState newState = request.getTicketState();
+
+            // Validate state transitions
+            if (newState == TicketState.CLOSED) {
+                ticket.setClosedDate(java.time.Instant.now());
+            } else if (newState == TicketState.UNASSIGNED) {
+                // If state becomes UNASSIGNED: delete assignment and set ticket.assignedSupport = null
+                supportTicketAssignmentRepository.deleteByTicket(ticket);
+                ticket.setAssignedSupport(null);
+            }
+
+            ticket.setTicketState(newState);
+            updated = true;
+        }
+
+        // Update ticket category if provided
+        if (request.getTicketCategory() != null) {
+            ticket.setTicketCategory(request.getTicketCategory());
+            updated = true;
+        }
+
+        if (updated) {
+            ticket.setUpdateDate(java.time.Instant.now());
+            Ticket savedTicket = ticketRepository.save(ticket);
+            return mapToTicketResponseWithAllDetails(savedTicket);
+        }
+
+        // Return current ticket if no updates were made
+        return mapToTicketResponseWithAllDetails(ticket);
+    }
+
+    /**
+     * Close a ticket (shortcut method).
+     *
+     * @param ticketId the ID of the ticket to close
+     * @param authentication the authentication object containing current user info
+     * @return the updated ticket response
+     * @throws IllegalArgumentException if ticket not found or not authorized
+     */
+    @Transactional
+    public TicketResponse closeTicket(Long ticketId, Authentication authentication) {
+        SupportTicketUpdateRequest request = new SupportTicketUpdateRequest();
+        request.setTicketState(TicketState.CLOSED);
+        return updateSupportTicket(ticketId, request, authentication);
     }
 }

@@ -3,10 +3,6 @@ package de.bachelorarbeit.ticketsystem.model.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-/**
- * SupportTicketAssignment entity representing the assignment of a ticket to a support user.
- * Uses a composite primary key consisting of ticket and support user.
- */
 @Entity
 @Table(name = "support_ticket_assignment")
 public class SupportTicketAssignment {
@@ -15,19 +11,20 @@ public class SupportTicketAssignment {
     private SupportTicketAssignmentPk sta_pk;
 
     @MapsId("ticketId")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ticket_id", nullable = false)
     private Ticket ticket;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "support_mail", referencedColumnName = "mail", insertable = false, updatable = false)
+    @MapsId("supportUserMail")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "support_user_mail", referencedColumnName = "mail", nullable = false)
     private UserAccount supportUser;
 
-    @Column(nullable = false)
+    @Column(name = "last_viewed", nullable = false)
     private Instant lastViewed;
 
-    // Default constructor required by JPA
-    public SupportTicketAssignment() {
+    // JPA
+    protected SupportTicketAssignment() {
     }
 
     public SupportTicketAssignment(Ticket ticket, UserAccount supportUser) {
@@ -37,14 +34,12 @@ public class SupportTicketAssignment {
         this.lastViewed = Instant.now();
     }
 
-    // Getters and setters
-
-    public SupportTicketAssignmentPk getId() {
+    public SupportTicketAssignmentPk getSta_pk() {
         return sta_pk;
     }
 
-    public void setId(SupportTicketAssignmentPk id) {
-        this.sta_pk = id;
+    public void setSta_pk(SupportTicketAssignmentPk sta_pk) {
+        this.sta_pk = sta_pk;
     }
 
     public Ticket getTicket() {
@@ -71,9 +66,6 @@ public class SupportTicketAssignment {
         this.lastViewed = lastViewed;
     }
 
-    /**
-     * Updates the lastViewed timestamp to the current time.
-     */
     public void updateLastViewed() {
         this.lastViewed = Instant.now();
     }
@@ -81,7 +73,7 @@ public class SupportTicketAssignment {
     @Override
     public String toString() {
         return "SupportTicketAssignment{" +
-                "pk=" + sta_pk +
+                "sta_pk=" + sta_pk +
                 ", lastViewed=" + lastViewed +
                 '}';
     }

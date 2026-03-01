@@ -6,25 +6,22 @@ import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Embeddable composite key for SupportTicketAssignment entity.
- * Consists of ticketId and supportEmail.
- */
 @Embeddable
 public class SupportTicketAssignmentPk implements Serializable {
 
     @Column(name = "ticket_id")
     private Long ticketId;
+
     @Column(name = "support_user_mail")
     private String supportUserMail;
 
-    // Default constructor required by JPA
-    public SupportTicketAssignmentPk() {
+    // JPA
+    protected SupportTicketAssignmentPk() {
     }
 
-    public SupportTicketAssignmentPk(Long ticketId, String supportMail) {
+    public SupportTicketAssignmentPk(Long ticketId, String supportUserMail) {
         this.ticketId = ticketId;
-        this.supportUserMail = supportMail;
+        this.supportUserMail = supportUserMail;
     }
 
     public Long getTicketId() {
@@ -39,16 +36,17 @@ public class SupportTicketAssignmentPk implements Serializable {
         return supportUserMail;
     }
 
-    public void setSupportUserMail(String supportEmail) {
-        this.supportUserMail = supportEmail;
+    public void setSupportUserMail(String supportUserMail) {
+        this.supportUserMail = supportUserMail;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof SupportTicketAssignmentPk)) return false;
         SupportTicketAssignmentPk that = (SupportTicketAssignmentPk) o;
-        return Objects.equals(ticketId, that.ticketId) && Objects.equals(supportUserMail, that.supportUserMail);
+        return Objects.equals(ticketId, that.ticketId) &&
+                Objects.equals(supportUserMail, that.supportUserMail);
     }
 
     @Override
@@ -58,6 +56,9 @@ public class SupportTicketAssignmentPk implements Serializable {
 
     @Override
     public String toString() {
-        return "SupportTicketAssignmentId{" + "ticketId=" + ticketId + ", supportEmail='" + supportUserMail + '\'' + '}';
+        return "SupportTicketAssignmentPk{" +
+                "ticketId=" + ticketId +
+                ", supportUserMail='" + supportUserMail + '\'' +
+                '}';
     }
 }

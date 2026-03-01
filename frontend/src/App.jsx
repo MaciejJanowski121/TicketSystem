@@ -9,6 +9,7 @@ import MyTicketsPage from './pages/MyTicketsPage'
 import MyTicketDetailPage from './pages/MyTicketDetailPage'
 import TicketsOverviewPage from './pages/TicketsOverviewPage'
 import TicketDetailsReadOnlyPage from './pages/TicketDetailsReadOnlyPage'
+import SupportTicketsPage from './pages/SupportTicketsPage'
 import './App.css'
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             <Route path="/tickets/new" element={<CreateTicketPage />} />
             <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/my-tickets/:ticketId" element={<MyTicketDetailPage />} />
+            <Route path="/support/tickets" element={<SupportTicketsPage />} />
           </Routes>
         </main>
       </div>

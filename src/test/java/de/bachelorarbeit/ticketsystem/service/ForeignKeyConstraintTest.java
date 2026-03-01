@@ -100,8 +100,9 @@ public class ForeignKeyConstraintTest {
 
         assertNotNull(response);
         assertEquals("This should work", response.getComment());
-        assertEquals(testTicket.getTicketId(), response.getTicketId());
-        System.out.println("[DEBUG_LOG] Successfully created comment for ticket ID: " + response.getTicketId());
+        assertNotNull(response.getAuthorUsername());
+        assertNotNull(response.getCommentDate());
+        System.out.println("[DEBUG_LOG] Successfully created comment for ticket ID: " + testTicket.getTicketId());
     }
 
     @Test

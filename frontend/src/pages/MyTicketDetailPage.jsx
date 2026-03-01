@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
+import { normalizeComments } from '../utils/comments';
 import './MyTicketDetailPage.css';
 
 function MyTicketDetailPage() {
@@ -338,11 +339,11 @@ function MyTicketDetailPage() {
                     <p className="no-comments">No comments yet.</p>
                   ) : (
                     <div className="comments-list">
-                      {comments.map((comment, index) => (
+                      {normalizeComments(comments, 'comments').map((comment, index) => (
                         <div key={index} className="comment-item">
                           <div className="comment-header">
                             <span className="comment-author">
-                              {comment.commentUserName}
+                              {comment.authorUsername}
                             </span>
                             <span className="comment-date">
                               {formatDate(comment.commentDate)}

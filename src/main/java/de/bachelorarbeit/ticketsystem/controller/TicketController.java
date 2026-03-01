@@ -2,8 +2,8 @@ package de.bachelorarbeit.ticketsystem.controller;
 
 import de.bachelorarbeit.ticketsystem.dto.CreateCommentRequest;
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
-import de.bachelorarbeit.ticketsystem.dto.CommentResponse;
 import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
+import de.bachelorarbeit.ticketsystem.dto.TicketCommentResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketCategory;
@@ -137,10 +137,10 @@ public class TicketController {
      */
     @GetMapping("/{ticketId}/comments")
     @PreAuthorize("hasRole('ENDUSER') or hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
-    public ResponseEntity<List<CommentResponse>> getTicketComments(@PathVariable Long ticketId,
+    public ResponseEntity<List<TicketCommentResponse>> getTicketComments(@PathVariable Long ticketId,
                                                                  Authentication authentication) {
         try {
-            List<CommentResponse> comments = ticketService.getTicketComments(ticketId, authentication);
+            List<TicketCommentResponse> comments = ticketService.getTicketComments(ticketId, authentication);
             return ResponseEntity.ok(comments);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -159,16 +159,17 @@ public class TicketController {
      */
     @PostMapping("/{ticketId}/comments")
     @PreAuthorize("hasRole('ENDUSER') or hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
-    public ResponseEntity<CommentResponse> createTicketComment(@PathVariable Long ticketId,
+    public ResponseEntity<?> createTicketComment(@PathVariable Long ticketId,
                                                              @Valid @RequestBody CreateCommentRequest request,
                                                              Authentication authentication) {
         try {
-            CommentResponse comment = ticketService.createTicketComment(ticketId, request, authentication);
+            TicketCommentResponse comment = ticketService.createTicketComment(ticketId, request, authentication);
             return ResponseEntity.status(HttpStatus.CREATED).body(comment);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse(e.getMessage()));
         }
     }
 }

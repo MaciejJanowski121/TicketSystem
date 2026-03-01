@@ -2,7 +2,6 @@ package de.bachelorarbeit.ticketsystem.service;
 
 import de.bachelorarbeit.ticketsystem.dto.CreateCommentRequest;
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
-import de.bachelorarbeit.ticketsystem.dto.CommentResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketCommentResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
@@ -139,24 +138,6 @@ public class TicketService {
         return mapToTicketResponse(ticket);
     }
 
-    /**
-     * Get all tickets sorted by updateDate descending.
-     *
-     * @param authentication the authentication object containing current user info
-     * @return list of all tickets sorted by updateDate descending
-     */
-    @Transactional(readOnly = true)
-    public List<TicketResponse> getAllTickets(Authentication authentication) {
-        // Verify user is authenticated (this method is accessible to all authenticated users)
-        getCurrentUser(authentication);
-
-        // Get all tickets sorted by updateDate descending
-        List<Ticket> tickets = ticketRepository.findAllByOrderByUpdateDateDesc();
-
-        return tickets.stream()
-                .map(this::mapToTicketResponseWithCreator)
-                .collect(Collectors.toList());
-    }
 
     /**
      * Get all tickets with optional filtering and sorting.
@@ -372,7 +353,7 @@ public class TicketService {
      * @throws IllegalArgumentException if ticket not found
      */
     @Transactional(readOnly = true)
-    public List<CommentResponse> getTicketComments(Long ticketId, Authentication authentication) {
+    public List<TicketCommentResponse> getTicketComments(Long ticketId, Authentication authentication) {
         // Verify user is authenticated (this method is accessible to all authenticated users for reading comments)
         getCurrentUser(authentication);
 
@@ -389,7 +370,7 @@ public class TicketService {
         List<TicketComment> comments = ticketCommentRepository.findByTicket(ticket);
 
         return comments.stream()
-                .map(this::mapToCommentResponse)
+                .map(this::mapToTicketCommentResponse)
                 .collect(Collectors.toList());
     }
 
@@ -399,11 +380,11 @@ public class TicketService {
      * @param ticketId the ID of the ticket
      * @param request the comment creation request
      * @param authentication the authentication object containing current user info
-     * @return the created comment as CommentResponse
+     * @return the created comment as TicketCommentResponse
      * @throws IllegalArgumentException if ticket not found or access denied
      */
     @Transactional
-    public CommentResponse createTicketComment(Long ticketId, CreateCommentRequest request, Authentication authentication) {
+    public TicketCommentResponse createTicketComment(Long ticketId, CreateCommentRequest request, Authentication authentication) {
         UserAccount currentUser = getCurrentUser(authentication);
 
         // Validate ticket exists and get it within the same transaction
@@ -416,7 +397,7 @@ public class TicketService {
 
         // Authorization: ENDUSER can only comment on own tickets, SUPPORTUSER and ADMINUSER can comment on any ticket
         if (currentUser.getRole() == Role.ENDUSER && !ticket.getEndUser().equals(currentUser)) {
-            throw new SecurityException("Access denied: You can only comment on your own tickets");
+            throw new SecurityException("Access denied: You cannot comment on this ticket.");
         }
 
         try {
@@ -428,7 +409,7 @@ public class TicketService {
             ticket.setUpdateDate(java.time.Instant.now());
             ticketRepository.save(ticket);
 
-            return mapToCommentResponse(savedComment);
+            return mapToTicketCommentResponse(savedComment);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             // Handle foreign key constraint violation
             if (e.getMessage() != null && e.getMessage().contains("ticket_id")) {
@@ -444,21 +425,6 @@ public class TicketService {
         }
     }
 
-    /**
-     * Map TicketComment entity to CommentResponse DTO.
-     *
-     * @param comment the ticket comment entity
-     * @return the comment response DTO
-     */
-    private CommentResponse mapToCommentResponse(TicketComment comment) {
-        return new CommentResponse(
-                comment.getTc_pk().getTicketId(),
-                comment.getCommentUser().getMail(),
-                comment.getCommentUser().getUsername(),
-                comment.getCommentDate(),
-                comment.getComment()
-        );
-    }
 
     /**
      * Map TicketComment entity to TicketCommentResponse DTO.

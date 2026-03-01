@@ -1,6 +1,6 @@
 package de.bachelorarbeit.ticketsystem.service;
 
-import de.bachelorarbeit.ticketsystem.dto.CommentResponse;
+import de.bachelorarbeit.ticketsystem.dto.TicketCommentResponse;
 import de.bachelorarbeit.ticketsystem.model.entity.*;
 import de.bachelorarbeit.ticketsystem.repository.TicketCommentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketRepository;
@@ -86,7 +86,7 @@ public class CommentVisibilityTest {
         );
 
         // Ticket creator should be able to see comments
-        List<CommentResponse> comments = ticketService.getTicketComments(testTicket.getTicketId(), auth);
+        List<TicketCommentResponse> comments = ticketService.getTicketComments(testTicket.getTicketId(), auth);
 
         assertEquals(2, comments.size());
         System.out.println("[DEBUG_LOG] Ticket creator can see " + comments.size() + " comments");
@@ -102,17 +102,17 @@ public class CommentVisibilityTest {
         );
 
         // Other end user should now be able to see comments (this was the bug)
-        List<CommentResponse> comments = ticketService.getTicketComments(testTicket.getTicketId(), auth);
+        List<TicketCommentResponse> comments = ticketService.getTicketComments(testTicket.getTicketId(), auth);
 
         assertEquals(2, comments.size());
         System.out.println("[DEBUG_LOG] Other end user can see " + comments.size() + " comments");
-        
+
         // Verify the comments contain the expected content
         boolean hasCreatorComment = comments.stream()
                 .anyMatch(c -> c.getComment().equals("Comment by ticket creator"));
         boolean hasSupportComment = comments.stream()
                 .anyMatch(c -> c.getComment().equals("Comment by support user"));
-        
+
         assertTrue(hasCreatorComment, "Should see comment by ticket creator");
         assertTrue(hasSupportComment, "Should see comment by support user");
     }
@@ -127,7 +127,7 @@ public class CommentVisibilityTest {
         );
 
         // Support user should be able to see comments
-        List<CommentResponse> comments = ticketService.getTicketComments(testTicket.getTicketId(), auth);
+        List<TicketCommentResponse> comments = ticketService.getTicketComments(testTicket.getTicketId(), auth);
 
         assertEquals(2, comments.size());
         System.out.println("[DEBUG_LOG] Support user can see " + comments.size() + " comments");

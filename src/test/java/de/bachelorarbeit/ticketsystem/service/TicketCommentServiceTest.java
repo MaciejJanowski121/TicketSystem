@@ -1,7 +1,7 @@
 package de.bachelorarbeit.ticketsystem.service;
 
 import de.bachelorarbeit.ticketsystem.dto.CreateCommentRequest;
-import de.bachelorarbeit.ticketsystem.dto.CommentResponse;
+import de.bachelorarbeit.ticketsystem.dto.TicketCommentResponse;
 import de.bachelorarbeit.ticketsystem.model.entity.*;
 import de.bachelorarbeit.ticketsystem.repository.TicketCommentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketRepository;
@@ -43,7 +43,7 @@ public class TicketCommentServiceTest {
     void testCreateCommentRequestValidation() {
         // Test CreateCommentRequest validation
         CreateCommentRequest request = new CreateCommentRequest();
-        
+
         // Test with null value
         assertNull(request.getComment());
 
@@ -59,25 +59,31 @@ public class TicketCommentServiceTest {
     }
 
     @Test
-    void testCommentResponseCreation() {
-        // Test CommentResponse creation
-        CommentResponse response = new CommentResponse();
-        
+    void testTicketCommentResponseCreation() {
+        // Test TicketCommentResponse creation
+        TicketCommentResponse response = new TicketCommentResponse();
+
         // Test setters
-        response.setTicketId(1L);
-        response.setCommentUserMail("test@example.com");
-        response.setCommentUserName("testuser");
-        response.setCommentDate(java.time.Instant.now());
         response.setComment("Test comment");
+        response.setCommentDate(java.time.Instant.now());
+        response.setAuthorUsername("testuser");
 
         // Verify getters
-        assertEquals(1L, response.getTicketId());
-        assertEquals("test@example.com", response.getCommentUserMail());
-        assertEquals("testuser", response.getCommentUserName());
         assertEquals("Test comment", response.getComment());
+        assertEquals("testuser", response.getAuthorUsername());
         assertNotNull(response.getCommentDate());
 
-        System.out.println("[DEBUG_LOG] CommentResponse creation test completed");
+        // Test constructor
+        TicketCommentResponse response2 = new TicketCommentResponse(
+                "Another comment", 
+                java.time.Instant.now(), 
+                "anotheruser"
+        );
+        assertEquals("Another comment", response2.getComment());
+        assertEquals("anotheruser", response2.getAuthorUsername());
+        assertNotNull(response2.getCommentDate());
+
+        System.out.println("[DEBUG_LOG] TicketCommentResponse creation test completed");
     }
 
     @Test
@@ -92,7 +98,7 @@ public class TicketCommentServiceTest {
 
         // Create comment using entity constructor
         TicketComment comment = new TicketComment(testTicket, testUser, "This is a test comment");
-        
+
         // Verify comment properties
         assertEquals(testTicket, comment.getTicket());
         assertEquals(testUser, comment.getCommentUser());

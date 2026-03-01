@@ -115,8 +115,9 @@ public class TicketId16ConstraintTest {
 
             assertNotNull(response);
             assertEquals("Comment for existing ticket", response.getComment());
-            assertEquals(actualTicketId, response.getTicketId());
-            System.out.println("[DEBUG_LOG] Successfully created comment for ticket ID: " + response.getTicketId());
+            assertNotNull(response.getAuthorUsername());
+            assertNotNull(response.getCommentDate());
+            System.out.println("[DEBUG_LOG] Successfully created comment for ticket ID: " + actualTicketId);
         } else {
             System.out.println("[DEBUG_LOG] Found ticket with ID 16: " + ticket16.getTicketId());
 
@@ -137,7 +138,8 @@ public class TicketId16ConstraintTest {
 
             assertNotNull(response);
             assertEquals("Comment for ticket 16", response.getComment());
-            assertEquals(16L, response.getTicketId());
+            assertNotNull(response.getAuthorUsername());
+            assertNotNull(response.getCommentDate());
             System.out.println("[DEBUG_LOG] Successfully created comment for ticket ID 16");
         }
     }

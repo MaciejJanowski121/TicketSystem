@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn } from '../utils/auth';
+import { normalizeComments } from '../utils/comments';
 import './TicketDetailsReadOnlyPage.css';
 
 function TicketDetailsReadOnlyPage() {
@@ -237,7 +238,7 @@ function TicketDetailsReadOnlyPage() {
                   <p className="no-comments">No comments yet.</p>
                 ) : (
                   <div className="comments-list">
-                    {ticket.comments
+                    {normalizeComments(ticket.comments, 'ticket')
                       .sort((a, b) => new Date(a.commentDate) - new Date(b.commentDate))
                       .map((comment, index) => (
                         <div key={index} className="comment-item">

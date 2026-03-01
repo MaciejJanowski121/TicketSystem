@@ -104,13 +104,14 @@ function Navbar() {
               Create Ticket
             </NavLink>
           )}
-          {/* Placeholder for future Tickets link */}
-          {/* <NavLink 
-            to="/tickets" 
-            className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
-          >
-            Tickets
-          </NavLink> */}
+          {userLoggedIn && (
+            <NavLink 
+              to="/tickets" 
+              className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
+            >
+              Tickets
+            </NavLink>
+          )}
         </div>
 
         {/* Right section - Auth/Account Area */}

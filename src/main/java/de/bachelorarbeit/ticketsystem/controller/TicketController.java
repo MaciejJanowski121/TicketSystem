@@ -3,7 +3,11 @@ package de.bachelorarbeit.ticketsystem.controller;
 import de.bachelorarbeit.ticketsystem.dto.CreateCommentRequest;
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
 import de.bachelorarbeit.ticketsystem.dto.CommentResponse;
+import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
+import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
+import de.bachelorarbeit.ticketsystem.model.entity.TicketCategory;
+import de.bachelorarbeit.ticketsystem.model.entity.TicketState;
 import de.bachelorarbeit.ticketsystem.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -68,6 +72,60 @@ public class TicketController {
                                                         Authentication authentication) {
         TicketResponse ticket = ticketService.getMyTicketById(ticketId, authentication);
         return ResponseEntity.ok(ticket);
+    }
+
+    /**
+     * Get all tickets with optional filtering and sorting.
+     * Accessible to any authenticated user (ENDUSER, SUPPORT, ADMIN).
+     *
+     * @param search optional search term to match title, description, creator username, or assigned support username
+     * @param state optional state filter
+     * @param category optional category filter
+     * @param sort optional sort field (createDate or updateDate), defaults to updateDate
+     * @param direction optional sort direction (ASC or DESC), defaults to DESC
+     * @param authentication the authentication object containing current user info
+     * @return list of tickets matching the criteria
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ENDUSER') or hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
+    public ResponseEntity<?> getAllTickets(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) TicketState state,
+            @RequestParam(required = false) TicketCategory category,
+            @RequestParam(required = false, defaultValue = "updateDate") String sort,
+            @RequestParam(required = false, defaultValue = "DESC") String direction,
+            Authentication authentication) {
+        try {
+            List<TicketListItemResponse> tickets = ticketService.getAllTickets(
+                    search, state, category, sort, direction, authentication);
+            return ResponseEntity.ok(tickets);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An error occurred while retrieving tickets"));
+        }
+    }
+
+    /**
+     * Get a specific ticket by ID for any authenticated user (read-only).
+     *
+     * @param ticketId the ID of the ticket to retrieve
+     * @param authentication the authentication object containing current user info
+     * @return the ticket details
+     */
+    @GetMapping("/{ticketId}")
+    @PreAuthorize("hasRole('ENDUSER') or hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
+    public ResponseEntity<?> getTicketById(@PathVariable Long ticketId,
+                                          Authentication authentication) {
+        try {
+            TicketResponse ticket = ticketService.getTicketById(ticketId, authentication);
+            return ResponseEntity.ok(ticket);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("Ticket not found"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An error occurred while retrieving the ticket"));
+        }
     }
 
     /**

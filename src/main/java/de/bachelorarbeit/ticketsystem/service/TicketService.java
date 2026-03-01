@@ -3,9 +3,12 @@ package de.bachelorarbeit.ticketsystem.service;
 import de.bachelorarbeit.ticketsystem.dto.CreateCommentRequest;
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
 import de.bachelorarbeit.ticketsystem.dto.CommentResponse;
+import de.bachelorarbeit.ticketsystem.dto.TicketCommentResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
+import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
 import de.bachelorarbeit.ticketsystem.model.entity.Role;
 import de.bachelorarbeit.ticketsystem.model.entity.Ticket;
+import de.bachelorarbeit.ticketsystem.model.entity.TicketCategory;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketComment;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketState;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
@@ -137,6 +140,150 @@ public class TicketService {
     }
 
     /**
+     * Get all tickets sorted by updateDate descending.
+     *
+     * @param authentication the authentication object containing current user info
+     * @return list of all tickets sorted by updateDate descending
+     */
+    @Transactional(readOnly = true)
+    public List<TicketResponse> getAllTickets(Authentication authentication) {
+        // Verify user is authenticated (this method is accessible to all authenticated users)
+        getCurrentUser(authentication);
+
+        // Get all tickets sorted by updateDate descending
+        List<Ticket> tickets = ticketRepository.findAllByOrderByUpdateDateDesc();
+
+        return tickets.stream()
+                .map(this::mapToTicketResponseWithCreator)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all tickets with optional filtering and sorting.
+     *
+     * @param search optional search term to match title, description, creator username, or assigned support username
+     * @param state optional state filter
+     * @param category optional category filter
+     * @param sort sort field (createDate or updateDate)
+     * @param direction sort direction (ASC or DESC)
+     * @param authentication the authentication object containing current user info
+     * @return list of tickets matching the criteria
+     */
+    @Transactional(readOnly = true)
+    public List<TicketListItemResponse> getAllTickets(String search, TicketState state, TicketCategory category,
+                                                     String sort, String direction, Authentication authentication) {
+        // Verify user is authenticated (this method is accessible to all authenticated users)
+        getCurrentUser(authentication);
+
+        // Validate sort field
+        if (sort == null || (!sort.equals("createDate") && !sort.equals("updateDate"))) {
+            sort = "updateDate";
+        }
+
+        // Validate direction
+        if (direction == null || (!direction.equals("ASC") && !direction.equals("DESC"))) {
+            direction = "DESC";
+        }
+
+        // Get tickets with filters and sorting based on sort field and direction
+        List<Ticket> tickets;
+
+        // Check if search is null or blank - use non-search methods to avoid PostgreSQL bytea issues
+        boolean hasSearch = search != null && !search.isBlank();
+
+        if ("createDate".equals(sort)) {
+            if ("ASC".equals(direction)) {
+                if (hasSearch) {
+                    tickets = ticketRepository.findTicketsWithFiltersOrderByCreateDateAsc(search, state, category);
+                } else {
+                    // No search - use simple filtering or findAll if no filters
+                    if (state == null && category == null) {
+                        tickets = ticketRepository.findAllByOrderByCreateDateAsc();
+                    } else {
+                        tickets = ticketRepository.findTicketsWithFiltersNoSearchOrderByCreateDateAsc(state, category);
+                    }
+                }
+            } else {
+                if (hasSearch) {
+                    tickets = ticketRepository.findTicketsWithFiltersOrderByCreateDateDesc(search, state, category);
+                } else {
+                    // No search - use simple filtering or findAll if no filters
+                    if (state == null && category == null) {
+                        tickets = ticketRepository.findAllByOrderByCreateDateDesc();
+                    } else {
+                        tickets = ticketRepository.findTicketsWithFiltersNoSearchOrderByCreateDateDesc(state, category);
+                    }
+                }
+            }
+        } else { // updateDate (default)
+            if ("ASC".equals(direction)) {
+                if (hasSearch) {
+                    tickets = ticketRepository.findTicketsWithFiltersOrderByUpdateDateAsc(search, state, category);
+                } else {
+                    // No search - use simple filtering or findAll if no filters
+                    if (state == null && category == null) {
+                        tickets = ticketRepository.findAllByOrderByUpdateDateAsc();
+                    } else {
+                        tickets = ticketRepository.findTicketsWithFiltersNoSearchOrderByUpdateDateAsc(state, category);
+                    }
+                }
+            } else {
+                if (hasSearch) {
+                    tickets = ticketRepository.findTicketsWithFiltersOrderByUpdateDateDesc(search, state, category);
+                } else {
+                    // No search - use simple filtering or findAll if no filters
+                    if (state == null && category == null) {
+                        tickets = ticketRepository.findAllByOrderByUpdateDateDesc();
+                    } else {
+                        tickets = ticketRepository.findTicketsWithFiltersNoSearchOrderByUpdateDateDesc(state, category);
+                    }
+                }
+            }
+        }
+
+        return tickets.stream()
+                .map(this::mapToTicketListItemResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get a specific ticket by ID for any authenticated user (read-only).
+     *
+     * @param ticketId the ID of the ticket to retrieve
+     * @param authentication the authentication object containing current user info
+     * @return the ticket details
+     * @throws IllegalArgumentException if ticket not found
+     */
+    @Transactional(readOnly = true)
+    public TicketResponse getTicketById(Long ticketId, Authentication authentication) {
+        // Verify user is authenticated (this method is accessible to all authenticated users)
+        getCurrentUser(authentication);
+
+        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new IllegalArgumentException("Ticket not found");
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        // Fetch comments for the ticket within the transaction
+        List<TicketComment> comments = ticketCommentRepository.findByTicket(ticket);
+
+        // Map comments to TicketCommentResponse DTOs
+        List<TicketCommentResponse> commentResponses = comments.stream()
+                .map(this::mapToTicketCommentResponse)
+                .collect(Collectors.toList());
+
+        // Map to response DTO with all details including creator info within the transaction
+        TicketResponse response = mapToTicketResponseWithAllDetails(ticket);
+
+        // Set comments in the response (empty list if no comments)
+        response.setComments(commentResponses);
+
+        return response;
+    }
+
+    /**
      * Get current user from authentication.
      *
      * @param authentication the authentication object
@@ -175,16 +322,59 @@ public class TicketService {
     }
 
     /**
+     * Map Ticket entity to TicketResponse DTO with creator username.
+     *
+     * @param ticket the ticket entity
+     * @return the ticket response DTO with creator username
+     */
+    private TicketResponse mapToTicketResponseWithCreator(Ticket ticket) {
+        return new TicketResponse(
+                ticket.getTicketId(),
+                ticket.getTitle(),
+                ticket.getDescription(),
+                ticket.getTicketState(),
+                ticket.getTicketCategory(),
+                ticket.getCreateDate(),
+                ticket.getUpdateDate(),
+                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                ticket.getEndUser().getUsername()
+        );
+    }
+
+    /**
+     * Map Ticket entity to TicketResponse DTO with all details including creator info and closedDate.
+     *
+     * @param ticket the ticket entity
+     * @return the ticket response DTO with all details
+     */
+    private TicketResponse mapToTicketResponseWithAllDetails(Ticket ticket) {
+        return new TicketResponse(
+                ticket.getTicketId(),
+                ticket.getTitle(),
+                ticket.getDescription(),
+                ticket.getTicketState(),
+                ticket.getTicketCategory(),
+                ticket.getCreateDate(),
+                ticket.getUpdateDate(),
+                ticket.getClosedDate(),
+                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                ticket.getEndUser().getUsername(),
+                ticket.getEndUser().getMail()
+        );
+    }
+
+    /**
      * Get all comments for a specific ticket.
      *
      * @param ticketId the ID of the ticket
      * @param authentication the authentication object containing current user info
      * @return list of comments for the ticket
-     * @throws IllegalArgumentException if ticket not found or access denied
+     * @throws IllegalArgumentException if ticket not found
      */
     @Transactional(readOnly = true)
     public List<CommentResponse> getTicketComments(Long ticketId, Authentication authentication) {
-        UserAccount currentUser = getCurrentUser(authentication);
+        // Verify user is authenticated (this method is accessible to all authenticated users for reading comments)
+        getCurrentUser(authentication);
 
         Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
         if (ticketOpt.isEmpty()) {
@@ -193,10 +383,8 @@ public class TicketService {
 
         Ticket ticket = ticketOpt.get();
 
-        // Authorization: ENDUSER can only access own tickets, SUPPORTUSER and ADMINUSER can access any ticket
-        if (currentUser.getRole() == Role.ENDUSER && !ticket.getEndUser().equals(currentUser)) {
-            throw new SecurityException("Access denied: You can only view comments on your own tickets");
-        }
+        // No authorization restriction for reading comments - any authenticated user can view comments
+        // Only comment creation is restricted by role/ownership in createTicketComment method
 
         List<TicketComment> comments = ticketCommentRepository.findByTicket(ticket);
 
@@ -269,6 +457,47 @@ public class TicketService {
                 comment.getCommentUser().getUsername(),
                 comment.getCommentDate(),
                 comment.getComment()
+        );
+    }
+
+    /**
+     * Map TicketComment entity to TicketCommentResponse DTO.
+     *
+     * @param comment the ticket comment entity
+     * @return the ticket comment response DTO
+     */
+    private TicketCommentResponse mapToTicketCommentResponse(TicketComment comment) {
+        // Use username if available, otherwise use email
+        String authorUsername = comment.getCommentUser().getUsername();
+        if (authorUsername == null || authorUsername.trim().isEmpty()) {
+            authorUsername = comment.getCommentUser().getMail();
+        }
+
+        return new TicketCommentResponse(
+                comment.getComment(),
+                comment.getCommentDate(),
+                authorUsername
+        );
+    }
+
+    /**
+     * Map Ticket entity to TicketListItemResponse DTO.
+     *
+     * @param ticket the ticket entity
+     * @return the ticket list item response DTO
+     */
+    private TicketListItemResponse mapToTicketListItemResponse(Ticket ticket) {
+        return new TicketListItemResponse(
+                ticket.getTicketId(),
+                ticket.getTitle(),
+                ticket.getTicketState(),
+                ticket.getTicketCategory(),
+                ticket.getCreateDate(),
+                ticket.getUpdateDate(),
+                ticket.getClosedDate(),
+                ticket.getEndUser().getUsername(),
+                ticket.getEndUser().getMail(),
+                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null
         );
     }
 }

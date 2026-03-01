@@ -4,6 +4,7 @@ import de.bachelorarbeit.ticketsystem.model.entity.TicketCategory;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketState;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * DTO for ticket responses.
@@ -18,6 +19,10 @@ public class TicketResponse {
     private Instant createDate;
     private Instant updateDate;
     private String assignedSupport;
+    private String creatorUsername;
+    private String creatorEmail;
+    private Instant closedDate;
+    private List<TicketCommentResponse> comments;
 
     // Default constructor
     public TicketResponse() {
@@ -33,6 +38,36 @@ public class TicketResponse {
         this.createDate = createDate;
         this.updateDate = updateDate;
         this.assignedSupport = assignedSupport;
+    }
+
+    public TicketResponse(Long ticketId, String title, String description, TicketState ticketState, 
+                         TicketCategory ticketCategory, Instant createDate, Instant updateDate, 
+                         String assignedSupport, String creatorUsername) {
+        this.ticketId = ticketId;
+        this.title = title;
+        this.description = description;
+        this.ticketState = ticketState;
+        this.ticketCategory = ticketCategory;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
+        this.assignedSupport = assignedSupport;
+        this.creatorUsername = creatorUsername;
+    }
+
+    public TicketResponse(Long ticketId, String title, String description, TicketState ticketState, 
+                         TicketCategory ticketCategory, Instant createDate, Instant updateDate, 
+                         Instant closedDate, String assignedSupport, String creatorUsername, String creatorEmail) {
+        this.ticketId = ticketId;
+        this.title = title;
+        this.description = description;
+        this.ticketState = ticketState;
+        this.ticketCategory = ticketCategory;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
+        this.closedDate = closedDate;
+        this.assignedSupport = assignedSupport;
+        this.creatorUsername = creatorUsername;
+        this.creatorEmail = creatorEmail;
     }
 
     // Getters and setters
@@ -98,5 +133,37 @@ public class TicketResponse {
 
     public void setAssignedSupport(String assignedSupport) {
         this.assignedSupport = assignedSupport;
+    }
+
+    public String getCreatorUsername() {
+        return creatorUsername;
+    }
+
+    public void setCreatorUsername(String creatorUsername) {
+        this.creatorUsername = creatorUsername;
+    }
+
+    public String getCreatorEmail() {
+        return creatorEmail;
+    }
+
+    public void setCreatorEmail(String creatorEmail) {
+        this.creatorEmail = creatorEmail;
+    }
+
+    public Instant getClosedDate() {
+        return closedDate;
+    }
+
+    public void setClosedDate(Instant closedDate) {
+        this.closedDate = closedDate;
+    }
+
+    public List<TicketCommentResponse> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<TicketCommentResponse> comments) {
+        this.comments = comments;
     }
 }

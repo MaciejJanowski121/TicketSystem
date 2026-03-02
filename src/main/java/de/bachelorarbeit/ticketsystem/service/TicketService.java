@@ -884,4 +884,47 @@ public class TicketService {
         request.setTicketState(TicketState.CLOSED);
         return updateSupportTicket(ticketId, request, authentication);
     }
+
+    /**
+     * Delete a ticket and all related data (admin only).
+     * Performs cascading delete in the following order:
+     * 1. Delete SupportTicketAssignment for that ticket (if exists)
+     * 2. Delete UserTicket rows for that ticket (if exist)
+     * 3. Delete TicketComment rows for that ticket (if exist)
+     * 4. Delete the Ticket
+     *
+     * @param ticketId the ID of the ticket to delete
+     * @param authentication the authentication object containing current user info
+     * @throws IllegalArgumentException if ticket not found or user not authorized
+     */
+    @Transactional
+    public void deleteTicket(Long ticketId, Authentication authentication) {
+        UserAccount currentUser = getCurrentUser(authentication);
+
+        // Verify user has ADMINUSER role
+        if (currentUser.getRole() != Role.ADMINUSER) {
+            throw new IllegalArgumentException("Access denied: Only admin users can delete tickets");
+        }
+
+        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new IllegalArgumentException("Ticket not found");
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        // Cascading delete in the correct order to avoid foreign key constraint violations
+
+        // 1. Delete SupportTicketAssignment for that ticket (if exists)
+        supportTicketAssignmentRepository.deleteByTicket(ticket);
+
+        // 2. Delete UserTicket rows for that ticket (if exist)
+        userTicketRepository.deleteByTicket(ticket);
+
+        // 3. Delete TicketComment rows for that ticket (if exist)
+        ticketCommentRepository.deleteByTicket(ticket);
+
+        // 4. Delete the Ticket
+        ticketRepository.delete(ticket);
+    }
 }

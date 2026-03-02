@@ -261,6 +261,11 @@ function SupportTicketsPage() {
     return ticket.assignedSupportUsername === currentUser?.username || currentUser?.role === 'ADMINUSER';
   };
 
+  const canDelete = (ticket) => {
+    const currentUser = getCurrentUser();
+    return currentUser?.role === 'ADMINUSER';
+  };
+
   const handleUpdateStatus = async (ticketId, newStatus) => {
     setActionLoading(prev => ({ ...prev, [`${ticketId}-update-status`]: true }));
     setError('');
@@ -324,6 +329,48 @@ function SupportTicketsPage() {
       setError('Network error while updating ticket category.');
     } finally {
       setActionLoading(prev => ({ ...prev, [`${ticketId}-update-category`]: false }));
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId, ticketTitle) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the ticket "${ticketTitle}"?\n\nThis action cannot be undone and will permanently remove the ticket and all its comments.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActionLoading(prev => ({ ...prev, [`${ticketId}-delete`]: true }));
+    setError('');
+
+    try {
+      const token = getToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:8080/api/admin/tickets/${ticketId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        }
+      });
+
+      if (response.ok) {
+        // Refresh tickets after successful deletion
+        fetchTickets();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to delete ticket');
+      }
+    } catch (error) {
+      setError('Network error while deleting ticket.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`${ticketId}-delete`]: false }));
     }
   };
 
@@ -520,6 +567,15 @@ function SupportTicketsPage() {
                             disabled={actionLoading[`${ticket.ticketId}-close`]}
                           >
                             {actionLoading[`${ticket.ticketId}-close`] ? 'Closing...' : 'Close'}
+                          </button>
+                        )}
+                        {canDelete(ticket) && (
+                          <button
+                            className="action-btn delete-btn"
+                            onClick={() => handleDeleteTicket(ticket.ticketId, ticket.title)}
+                            disabled={actionLoading[`${ticket.ticketId}-delete`]}
+                          >
+                            {actionLoading[`${ticket.ticketId}-delete`] ? 'Deleting...' : 'Delete'}
                           </button>
                         )}
                         {canUpdate(ticket) && (

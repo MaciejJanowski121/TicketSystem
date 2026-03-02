@@ -13,16 +13,20 @@ import de.bachelorarbeit.ticketsystem.model.entity.TicketCategory;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketComment;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketState;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
+import de.bachelorarbeit.ticketsystem.model.entity.UserTicket;
+import de.bachelorarbeit.ticketsystem.model.entity.UserTicketPk;
 import de.bachelorarbeit.ticketsystem.repository.SupportTicketAssignmentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketCommentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketRepository;
 import de.bachelorarbeit.ticketsystem.repository.UserRepository;
+import de.bachelorarbeit.ticketsystem.repository.UserTicketRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -36,14 +40,17 @@ public class TicketService {
     private final UserRepository userRepository;
     private final TicketCommentRepository ticketCommentRepository;
     private final SupportTicketAssignmentRepository supportTicketAssignmentRepository;
+    private final UserTicketRepository userTicketRepository;
 
-    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, 
+    public TicketService(TicketRepository ticketRepository, UserRepository userRepository,
                         TicketCommentRepository ticketCommentRepository,
-                        SupportTicketAssignmentRepository supportTicketAssignmentRepository) {
+                        SupportTicketAssignmentRepository supportTicketAssignmentRepository,
+                        UserTicketRepository userTicketRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.ticketCommentRepository = ticketCommentRepository;
         this.supportTicketAssignmentRepository = supportTicketAssignmentRepository;
+        this.userTicketRepository = userTicketRepository;
     }
 
     /**
@@ -80,6 +87,12 @@ public class TicketService {
         // Save ticket with TicketRepository
         Ticket savedTicket = ticketRepository.save(ticket);
 
+        // Create UserTicket for the creator so the ticket is not unread for them
+        // Use savedTicket.getUpdateDate() as lastViewed to ensure it's not considered unread
+        UserTicket userTicket = new UserTicket(savedTicket, endUser);
+        userTicket.setLastViewed(savedTicket.getUpdateDate());
+        userTicketRepository.save(userTicket);
+
         // Map saved entity to TicketResponse and return
         return new TicketResponse(
                 savedTicket.getTicketId(),
@@ -97,7 +110,7 @@ public class TicketService {
      * Get all tickets for the current authenticated user.
      *
      * @param authentication the authentication object containing current user info
-     * @return list of tickets created by the current user, sorted by updateDate descending
+     * @return list of tickets created by the current user, sorted by unread first, then updateDate descending
      * @throws IllegalArgumentException if user not found or authentication is null
      */
     @Transactional(readOnly = true)
@@ -112,20 +125,37 @@ public class TicketService {
         // Get tickets sorted by updateDate descending using repository-level sorting
         List<Ticket> tickets = ticketRepository.findByEndUserOrderByUpdateDateDesc(currentUser);
 
+        // Get all UserTicket records for this user
+        List<UserTicket> userTickets = userTicketRepository.findByEndUser(currentUser);
+
+        // Create a map for quick lookup of UserTicket by ticket ID
+        Map<Long, UserTicket> userTicketMap = userTickets.stream()
+                .collect(Collectors.toMap(ut -> ut.getTicket().getTicketId(), ut -> ut));
+
+        // Map tickets to responses with unread status and sort by unread first, then updateDate DESC
         return tickets.stream()
-                .map(this::mapToTicketResponse)
+                .map(ticket -> mapToTicketResponseWithUnread(ticket, userTicketMap.get(ticket.getTicketId())))
+                .sorted((a, b) -> {
+                    // First, sort by unread status (unread first)
+                    if (a.isUnread() != b.isUnread()) {
+                        return a.isUnread() ? -1 : 1; // unread tickets first
+                    }
+                    // Then sort by updateDate descending
+                    return b.getUpdateDate().compareTo(a.getUpdateDate());
+                })
                 .collect(Collectors.toList());
     }
 
     /**
      * Get a specific ticket by ID for the current authenticated user.
+     * Updates the lastViewed timestamp for the user.
      *
      * @param ticketId the ID of the ticket to retrieve
      * @param authentication the authentication object containing current user info
      * @return the ticket details
      * @throws IllegalArgumentException if user not found or ticket not found or not owned by user
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public TicketResponse getMyTicketById(Long ticketId, Authentication authentication) {
         UserAccount currentUser = getCurrentUser(authentication);
 
@@ -139,6 +169,20 @@ public class TicketService {
         // Check if the ticket belongs to the current user
         if (!ticket.getEndUser().equals(currentUser)) {
             throw new IllegalArgumentException("Access denied: Ticket does not belong to current user");
+        }
+
+        // Update or create UserTicket record to track lastViewed
+        // Use existsById with EmbeddedId for idempotent upsert logic
+        UserTicketPk userTicketPk = new UserTicketPk(ticketId, currentUser.getMail());
+        if (userTicketRepository.existsById(userTicketPk)) {
+            // Load existing UserTicket and update lastViewed
+            UserTicket userTicket = userTicketRepository.findById(userTicketPk).get();
+            userTicket.updateLastViewed();
+            userTicketRepository.save(userTicket);
+        } else {
+            // Create new UserTicket with proper PK and entity fields
+            UserTicket userTicket = new UserTicket(ticket, currentUser);
+            userTicketRepository.save(userTicket);
         }
 
         return mapToTicketResponse(ticket);
@@ -234,17 +278,17 @@ public class TicketService {
     }
 
     /**
-     * Get a specific ticket by ID for any authenticated user (read-only).
+     * Get a specific ticket by ID for any authenticated user.
+     * Updates lastViewed timestamp for SUPPORT/ADMIN users if they are assigned to the ticket.
      *
      * @param ticketId the ID of the ticket to retrieve
      * @param authentication the authentication object containing current user info
      * @return the ticket details
      * @throws IllegalArgumentException if ticket not found
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public TicketResponse getTicketById(Long ticketId, Authentication authentication) {
-        // Verify user is authenticated (this method is accessible to all authenticated users)
-        getCurrentUser(authentication);
+        UserAccount currentUser = getCurrentUser(authentication);
 
         Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
         if (ticketOpt.isEmpty()) {
@@ -252,6 +296,16 @@ public class TicketService {
         }
 
         Ticket ticket = ticketOpt.get();
+
+        // Update lastViewed for SUPPORT/ADMIN users if they are assigned to this ticket
+        if (currentUser.getRole() == Role.SUPPORTUSER || currentUser.getRole() == Role.ADMINUSER) {
+            Optional<SupportTicketAssignment> assignmentOpt = supportTicketAssignmentRepository.findByTicketAndSupportUser(ticket, currentUser);
+            if (assignmentOpt.isPresent()) {
+                SupportTicketAssignment assignment = assignmentOpt.get();
+                assignment.updateLastViewed();
+                supportTicketAssignmentRepository.save(assignment);
+            }
+        }
 
         // Fetch comments for the ticket within the transaction
         List<TicketComment> comments = ticketCommentRepository.findByTicket(ticket);
@@ -482,8 +536,58 @@ public class TicketService {
                 ticket.getClosedDate(),
                 ticket.getEndUser().getUsername(),
                 ticket.getEndUser().getMail(),
+                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                false // Default unread to false for backward compatibility
+        );
+    }
+
+    /**
+     * Map Ticket entity to TicketListItemResponse DTO with unread status for support users.
+     *
+     * @param ticket the ticket entity
+     * @param assignment the support ticket assignment containing lastViewed info
+     * @return the ticket list item response DTO with unread status
+     */
+    private TicketListItemResponse mapToTicketListItemResponseWithUnread(Ticket ticket, SupportTicketAssignment assignment) {
+        boolean unread = ticket.getUpdateDate().isAfter(assignment.getLastViewed());
+        return new TicketListItemResponse(
+                ticket.getTicketId(),
+                ticket.getTitle(),
+                ticket.getTicketState(),
+                ticket.getTicketCategory(),
+                ticket.getCreateDate(),
+                ticket.getUpdateDate(),
+                ticket.getClosedDate(),
+                ticket.getEndUser().getUsername(),
+                ticket.getEndUser().getMail(),
+                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                unread
+        );
+    }
+
+    /**
+     * Map Ticket entity to TicketResponse DTO with unread status for end users.
+     *
+     * @param ticket the ticket entity
+     * @param userTicket the user ticket containing lastViewed info (can be null if never viewed)
+     * @return the ticket response DTO with unread status
+     */
+    private TicketResponse mapToTicketResponseWithUnread(Ticket ticket, UserTicket userTicket) {
+        // If no UserTicket record exists, consider it unread
+        boolean unread = userTicket == null || ticket.getUpdateDate().isAfter(userTicket.getLastViewed());
+
+        TicketResponse response = new TicketResponse(
+                ticket.getTicketId(),
+                ticket.getTitle(),
+                ticket.getDescription(),
+                ticket.getTicketState(),
+                ticket.getTicketCategory(),
+                ticket.getCreateDate(),
+                ticket.getUpdateDate(),
                 ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null
         );
+        response.setUnread(unread);
+        return response;
     }
 
     // ========== SUPPORT WORKFLOW METHODS ==========
@@ -510,40 +614,35 @@ public class TicketService {
             throw new IllegalArgumentException("Access denied: Only support users can access this endpoint");
         }
 
-        // Instead of ticketRepository.findByAssignedSupport(...)
         // Fetch assignments using assignmentRepository.findBySupportUser(currentUser)
         List<SupportTicketAssignment> assignments = supportTicketAssignmentRepository.findBySupportUser(currentUser);
-
-        // Map assignments to tickets via assignment.getTicket()
-        List<Ticket> tickets = assignments.stream()
-                .map(SupportTicketAssignment::getTicket)
-                .collect(Collectors.toList());
 
         // Apply filters if provided
         if (search != null && !search.isBlank()) {
             String searchLower = search.toLowerCase();
-            tickets = tickets.stream()
-                    .filter(ticket -> 
-                        ticket.getTitle().toLowerCase().contains(searchLower) ||
-                        ticket.getDescription().toLowerCase().contains(searchLower) ||
-                        (ticket.getEndUser().getUsername() != null && ticket.getEndUser().getUsername().toLowerCase().contains(searchLower))
-                    )
+            assignments = assignments.stream()
+                    .filter(assignment -> {
+                        Ticket ticket = assignment.getTicket();
+                        return ticket.getTitle().toLowerCase().contains(searchLower) ||
+                               ticket.getDescription().toLowerCase().contains(searchLower) ||
+                               (ticket.getEndUser().getUsername() != null && ticket.getEndUser().getUsername().toLowerCase().contains(searchLower));
+                    })
                     .collect(Collectors.toList());
         }
 
         if (state != null) {
-            tickets = tickets.stream()
-                    .filter(ticket -> ticket.getTicketState() == state)
+            assignments = assignments.stream()
+                    .filter(assignment -> assignment.getTicket().getTicketState() == state)
                     .collect(Collectors.toList());
         }
 
         if (category != null) {
-            tickets = tickets.stream()
-                    .filter(ticket -> ticket.getTicketCategory() == category)
+            assignments = assignments.stream()
+                    .filter(assignment -> assignment.getTicket().getTicketCategory() == category)
                     .collect(Collectors.toList());
         }
 
-        // Apply sorting
+        // Apply sorting: unread first, then by specified sort field and direction
         if (sort == null || (!sort.equals("createDate") && !sort.equals("updateDate"))) {
             sort = "updateDate";
         }
@@ -551,22 +650,33 @@ public class TicketService {
             direction = "DESC";
         }
 
-        if ("createDate".equals(sort)) {
-            if ("ASC".equals(direction)) {
-                tickets.sort((a, b) -> a.getCreateDate().compareTo(b.getCreateDate()));
-            } else {
-                tickets.sort((a, b) -> b.getCreateDate().compareTo(a.getCreateDate()));
-            }
-        } else { // updateDate
-            if ("ASC".equals(direction)) {
-                tickets.sort((a, b) -> a.getUpdateDate().compareTo(b.getUpdateDate()));
-            } else {
-                tickets.sort((a, b) -> b.getUpdateDate().compareTo(a.getUpdateDate()));
-            }
-        }
+        final String finalSort = sort;
+        final String finalDirection = direction;
 
-        return tickets.stream()
-                .map(this::mapToTicketListItemResponse)
+        assignments.sort((a, b) -> {
+            Ticket ticketA = a.getTicket();
+            Ticket ticketB = b.getTicket();
+
+            // First, sort by unread status (unread first)
+            boolean unreadA = ticketA.getUpdateDate().isAfter(a.getLastViewed());
+            boolean unreadB = ticketB.getUpdateDate().isAfter(b.getLastViewed());
+
+            if (unreadA != unreadB) {
+                return unreadA ? -1 : 1; // unread tickets first
+            }
+
+            // Then sort by the specified field and direction
+            if ("createDate".equals(finalSort)) {
+                int comparison = ticketA.getCreateDate().compareTo(ticketB.getCreateDate());
+                return "ASC".equals(finalDirection) ? comparison : -comparison;
+            } else { // updateDate
+                int comparison = ticketA.getUpdateDate().compareTo(ticketB.getUpdateDate());
+                return "ASC".equals(finalDirection) ? comparison : -comparison;
+            }
+        });
+
+        return assignments.stream()
+                .map(assignment -> mapToTicketListItemResponseWithUnread(assignment.getTicket(), assignment))
                 .collect(Collectors.toList());
     }
 

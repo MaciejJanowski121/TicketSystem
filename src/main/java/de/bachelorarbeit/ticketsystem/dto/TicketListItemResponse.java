@@ -20,6 +20,7 @@ public class TicketListItemResponse {
     private String creatorUsername;
     private String creatorEmail;
     private String assignedSupportUsername;
+    private boolean unread;
 
     // Default constructor
     public TicketListItemResponse() {
@@ -28,7 +29,7 @@ public class TicketListItemResponse {
     public TicketListItemResponse(Long ticketId, String title, TicketState ticketState, 
                                  TicketCategory ticketCategory, Instant createDate, Instant updateDate, 
                                  Instant closedDate, String creatorUsername, String creatorEmail, 
-                                 String assignedSupportUsername) {
+                                 String assignedSupportUsername, boolean unread) {
         this.ticketId = ticketId;
         this.title = title;
         this.ticketState = ticketState;
@@ -39,6 +40,7 @@ public class TicketListItemResponse {
         this.creatorUsername = creatorUsername;
         this.creatorEmail = creatorEmail;
         this.assignedSupportUsername = assignedSupportUsername;
+        this.unread = unread;
     }
 
     // Getters and setters
@@ -120,5 +122,13 @@ public class TicketListItemResponse {
 
     public void setAssignedSupportUsername(String assignedSupportUsername) {
         this.assignedSupportUsername = assignedSupportUsername;
+    }
+
+    public boolean isUnread() {
+        return unread;
+    }
+
+    public void setUnread(boolean unread) {
+        this.unread = unread;
     }
 }

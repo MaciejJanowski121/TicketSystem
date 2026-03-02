@@ -19,8 +19,9 @@ public class UserTicket {
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
 
+    @MapsId("endUserMail")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enduser_email", referencedColumnName = "mail", insertable = false, updatable = false)
+    @JoinColumn(name = "enduser_mail", referencedColumnName = "mail")
     private UserAccount endUser;
 
     @Column(nullable = false)

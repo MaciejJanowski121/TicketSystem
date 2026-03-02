@@ -227,6 +227,10 @@ function SupportTicketsPage() {
 
   const handleTicketClick = (ticketId) => {
     navigate(`/tickets/${ticketId}`);
+    // Refresh the ticket list after a short delay to reflect lastViewed update
+    setTimeout(() => {
+      fetchTickets();
+    }, 100);
   };
 
   const getCurrentUserEmail = () => {
@@ -462,13 +466,14 @@ function SupportTicketsPage() {
               </thead>
               <tbody>
                 {tickets.map(ticket => (
-                  <tr key={ticket.ticketId}>
+                  <tr key={ticket.ticketId} className={ticket.unread ? 'unread-row' : ''}>
                     <td className="ticket-title-cell">
                       <span 
                         className="ticket-title clickable" 
                         onClick={() => handleTicketClick(ticket.ticketId)}
                       >
                         {ticket.title}
+                        {ticket.unread && <span className="unread-badge">NEW</span>}
                       </span>
                     </td>
                     <td className="ticket-creator-cell">

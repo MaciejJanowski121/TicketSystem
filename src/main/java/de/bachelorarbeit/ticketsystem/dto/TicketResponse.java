@@ -23,6 +23,7 @@ public class TicketResponse {
     private String creatorEmail;
     private Instant closedDate;
     private List<TicketCommentResponse> comments;
+    private boolean unread;
 
     // Default constructor
     public TicketResponse() {
@@ -165,5 +166,13 @@ public class TicketResponse {
 
     public void setComments(List<TicketCommentResponse> comments) {
         this.comments = comments;
+    }
+
+    public boolean isUnread() {
+        return unread;
+    }
+
+    public void setUnread(boolean unread) {
+        this.unread = unread;
     }
 }

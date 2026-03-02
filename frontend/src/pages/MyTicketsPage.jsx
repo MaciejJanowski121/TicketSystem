@@ -47,11 +47,24 @@ function MyTicketsPage() {
 
   useEffect(() => {
     // Apply filter when tickets or filter changes
+    let filtered;
     if (filter === 'ALL') {
-      setFilteredTickets(tickets);
+      filtered = tickets;
     } else {
-      setFilteredTickets(tickets.filter(ticket => ticket.ticketState === filter));
+      filtered = tickets.filter(ticket => ticket.ticketState === filter);
     }
+
+    // Sort tickets: unread first, then by updateDate descending
+    filtered.sort((a, b) => {
+      // First, sort by unread status (unread first)
+      if (a.unread !== b.unread) {
+        return a.unread ? -1 : 1; // unread tickets first
+      }
+      // Then sort by updateDate descending
+      return new Date(b.updateDate) - new Date(a.updateDate);
+    });
+
+    setFilteredTickets(filtered);
   }, [tickets, filter]);
 
   const fetchTickets = async () => {
@@ -178,14 +191,17 @@ function MyTicketsPage() {
         ) : (
           <div className="tickets-grid">
             {filteredTickets.map(ticket => (
-              <div key={ticket.ticketId} className="ticket-card">
+              <div key={ticket.ticketId} className={`ticket-card ${ticket.unread ? 'unread' : ''}`}>
                 <div className="ticket-header">
-                  <h3 className="ticket-title">{ticket.title}</h3>
+                  <h3 className="ticket-title">
+                    {ticket.title}
+                    {ticket.unread && <span className="unread-badge">NEW</span>}
+                  </h3>
                   <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>
                     {stateNames[ticket.ticketState] || ticket.ticketState}
                   </span>
                 </div>
-                
+
                 <div className="ticket-meta">
                   <div className="ticket-category">
                     <strong>Category:</strong> {categoryNames[ticket.ticketCategory] || ticket.ticketCategory}
@@ -205,6 +221,12 @@ function MyTicketsPage() {
                   <Link 
                     to={`/my-tickets/${ticket.ticketId}`} 
                     className="btn btn-outline btn-small"
+                    onClick={() => {
+                      // Refresh the ticket list after a short delay to reflect lastViewed update
+                      setTimeout(() => {
+                        fetchTickets();
+                      }, 100);
+                    }}
                   >
                     View Details
                   </Link>

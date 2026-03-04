@@ -14,6 +14,8 @@ function SupportTicketsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState({});
+  const [closeModal, setCloseModal] = useState({ show: false, ticketId: null, ticketTitle: '' });
+  const [closeComment, setCloseComment] = useState('');
   const navigate = useNavigate();
 
   // Status filter options
@@ -145,7 +147,7 @@ function SupportTicketsPage() {
     }
   };
 
-  const handleSupportAction = async (ticketId, action) => {
+  const handleSupportAction = async (ticketId, action, comment = null) => {
     setActionLoading(prev => ({ ...prev, [`${ticketId}-${action}`]: true }));
     setError('');
 
@@ -169,6 +171,7 @@ function SupportTicketsPage() {
           break;
         case 'close':
           url += '/close';
+          body = { comment: comment };
           break;
         case 'update':
           method = 'PATCH';
@@ -245,7 +248,8 @@ function SupportTicketsPage() {
   const canRelease = (ticket) => {
     const currentUserEmail = getCurrentUserEmail();
     const currentUser = getCurrentUser();
-    return ticket.assignedSupportUsername && 
+    return ticket.ticketState !== 'CLOSED' && 
+           ticket.assignedSupportUsername && 
            (ticket.assignedSupportUsername === currentUser?.username || currentUser?.role === 'ADMINUSER');
   };
 
@@ -264,6 +268,31 @@ function SupportTicketsPage() {
   const canDelete = (ticket) => {
     const currentUser = getCurrentUser();
     return currentUser?.role === 'ADMINUSER';
+  };
+
+  const handleCloseTicketClick = (ticket) => {
+    setCloseModal({ 
+      show: true, 
+      ticketId: ticket.ticketId, 
+      ticketTitle: ticket.title 
+    });
+    setCloseComment('');
+  };
+
+  const handleCloseModalCancel = () => {
+    setCloseModal({ show: false, ticketId: null, ticketTitle: '' });
+    setCloseComment('');
+  };
+
+  const handleCloseModalConfirm = async () => {
+    if (!closeComment.trim()) {
+      setError('Closing comment is required');
+      return;
+    }
+
+    setCloseModal({ show: false, ticketId: null, ticketTitle: '' });
+    await handleSupportAction(closeModal.ticketId, 'close', closeComment.trim());
+    setCloseComment('');
   };
 
   const handleUpdateStatus = async (ticketId, newStatus) => {
@@ -563,7 +592,7 @@ function SupportTicketsPage() {
                         {canClose(ticket) && (
                           <button
                             className="action-btn close-btn"
-                            onClick={() => handleSupportAction(ticket.ticketId, 'close')}
+                            onClick={() => handleCloseTicketClick(ticket)}
                             disabled={actionLoading[`${ticket.ticketId}-close`]}
                           >
                             {actionLoading[`${ticket.ticketId}-close`] ? 'Closing...' : 'Close'}
@@ -623,6 +652,41 @@ function SupportTicketsPage() {
           </div>
         )}
       </div>
+
+      {/* Close Ticket Modal */}
+      {closeModal.show && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Close Ticket</h3>
+            <p>
+              You are about to close ticket: <strong>{closeModal.ticketTitle}</strong>
+            </p>
+            <p>Please provide a closing comment (required):</p>
+            <textarea
+              value={closeComment}
+              onChange={(e) => setCloseComment(e.target.value)}
+              placeholder="Enter your closing comment here..."
+              rows={4}
+              className="close-comment-textarea"
+            />
+            <div className="modal-buttons">
+              <button 
+                className="modal-btn cancel-btn" 
+                onClick={handleCloseModalCancel}
+              >
+                Cancel
+              </button>
+              <button 
+                className="modal-btn confirm-btn" 
+                onClick={handleCloseModalConfirm}
+                disabled={!closeComment.trim()}
+              >
+                Close Ticket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

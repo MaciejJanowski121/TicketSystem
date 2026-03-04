@@ -15,6 +15,21 @@ function TicketDetailsReadOnlyPage() {
   const [commentError, setCommentError] = useState('');
   const navigate = useNavigate();
 
+  // Helper function to get back link based on user role
+  const getBackLink = () => {
+    const currentUser = getCurrentUser();
+    if (currentUser && (currentUser.role === 'SUPPORTUSER' || currentUser.role === 'ADMINUSER')) {
+      return {
+        path: '/support/tickets',
+        text: '← Back to My Tickets'
+      };
+    }
+    return {
+      path: '/tickets',
+      text: '← Back to All Tickets'
+    };
+  };
+
   // Category display names
   const categoryNames = {
     'ACCOUNT_MANAGEMENT': 'Account Management',
@@ -194,8 +209,8 @@ function TicketDetailsReadOnlyPage() {
       <div className="page">
         <div className="container">
           <div className="ticket-detail-header">
-            <Link to="/tickets" className="back-link">
-              ← Back to All Tickets
+            <Link to={getBackLink().path} className="back-link">
+              {getBackLink().text}
             </Link>
           </div>
           <div className="loading-message">Loading ticket details...</div>
@@ -209,8 +224,8 @@ function TicketDetailsReadOnlyPage() {
       <div className="page">
         <div className="container">
           <div className="ticket-detail-header">
-            <Link to="/tickets" className="back-link">
-              ← Back to All Tickets
+            <Link to={getBackLink().path} className="back-link">
+              {getBackLink().text}
             </Link>
           </div>
           <div className="message error">
@@ -226,8 +241,8 @@ function TicketDetailsReadOnlyPage() {
       <div className="page">
         <div className="container">
           <div className="ticket-detail-header">
-            <Link to="/tickets" className="back-link">
-              ← Back to All Tickets
+            <Link to={getBackLink().path} className="back-link">
+              {getBackLink().text}
             </Link>
           </div>
           <div className="message error">
@@ -242,8 +257,8 @@ function TicketDetailsReadOnlyPage() {
     <div className="page">
       <div className="container">
         <div className="ticket-detail-header">
-          <Link to="/tickets" className="back-link">
-            ← Back to All Tickets
+          <Link to={getBackLink().path} className="back-link">
+            {getBackLink().text}
           </Link>
         </div>
 

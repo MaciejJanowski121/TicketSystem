@@ -1,5 +1,6 @@
 package de.bachelorarbeit.ticketsystem.controller;
 
+import de.bachelorarbeit.ticketsystem.dto.CloseTicketRequest;
 import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
 import de.bachelorarbeit.ticketsystem.dto.SupportTicketUpdateRequest;
 import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
@@ -156,22 +157,27 @@ public class SupportTicketController {
     }
 
     /**
-     * Close a ticket (shortcut endpoint).
+     * Close a ticket with a required closing comment.
      *
      * @param ticketId the ID of the ticket to close
+     * @param request the close request containing the required closing comment
      * @param authentication the authentication object containing current user info
      * @return the updated ticket response
      */
     @PostMapping("/{ticketId}/close")
     @PreAuthorize("hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
     public ResponseEntity<?> closeTicket(@PathVariable Long ticketId,
+                                        @Valid @RequestBody CloseTicketRequest request,
                                         Authentication authentication) {
         try {
-            TicketResponse ticket = ticketService.closeTicket(ticketId, authentication);
+            TicketResponse ticket = ticketService.closeTicketWithComment(ticketId, request.getComment(), authentication);
             return ResponseEntity.ok(ticket);
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorResponse(e.getMessage()));
+            } else if (e.getMessage().contains("Closing a ticket requires a concluding comment")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ErrorResponse(e.getMessage()));
             } else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)

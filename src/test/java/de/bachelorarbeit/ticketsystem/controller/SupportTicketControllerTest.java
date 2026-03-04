@@ -1,5 +1,6 @@
 package de.bachelorarbeit.ticketsystem.controller;
 
+import de.bachelorarbeit.ticketsystem.dto.CloseTicketRequest;
 import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
 import de.bachelorarbeit.ticketsystem.dto.SupportTicketUpdateRequest;
 import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
@@ -267,7 +268,8 @@ public class SupportTicketControllerTest {
         supportTicketController.assignTicket(testTicket.getTicketId(), supportAuth);
 
         // Close ticket
-        ResponseEntity<?> response = supportTicketController.closeTicket(testTicket.getTicketId(), supportAuth);
+        CloseTicketRequest closeRequest = new CloseTicketRequest("Ticket resolved successfully");
+        ResponseEntity<?> response = supportTicketController.closeTicket(testTicket.getTicketId(), closeRequest, supportAuth);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody() instanceof TicketResponse);

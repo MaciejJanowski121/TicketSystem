@@ -768,6 +768,11 @@ public class TicketService {
 
         Ticket ticket = ticketOpt.get();
 
+        // Check if ticket is closed
+        if (ticket.getTicketState() == TicketState.CLOSED) {
+            throw new IllegalArgumentException("Closed tickets cannot be released");
+        }
+
         // If no assignment exists -> conflict
         Optional<SupportTicketAssignment> assignmentOpt = supportTicketAssignmentRepository.findByTicket(ticket);
         if (assignmentOpt.isEmpty()) {
@@ -883,6 +888,60 @@ public class TicketService {
         SupportTicketUpdateRequest request = new SupportTicketUpdateRequest();
         request.setTicketState(TicketState.CLOSED);
         return updateSupportTicket(ticketId, request, authentication);
+    }
+
+    /**
+     * Close a ticket with a required closing comment.
+     * This method atomically closes the ticket and creates a closing comment.
+     *
+     * @param ticketId the ID of the ticket to close
+     * @param comment the required closing comment
+     * @param authentication the authentication object containing current user info
+     * @return the updated ticket response
+     * @throws IllegalArgumentException if ticket not found, not authorized, or comment is blank
+     */
+    @Transactional
+    public TicketResponse closeTicketWithComment(Long ticketId, String comment, Authentication authentication) {
+        UserAccount currentUser = getCurrentUser(authentication);
+
+        // Verify user has SUPPORTUSER or ADMINUSER role
+        if (currentUser.getRole() != Role.SUPPORTUSER && currentUser.getRole() != Role.ADMINUSER) {
+            throw new IllegalArgumentException("Access denied: Only support/admin users can close tickets");
+        }
+
+        // Validate comment is not blank
+        if (comment == null || comment.trim().isEmpty()) {
+            throw new IllegalArgumentException("Closing a ticket requires a concluding comment from support/admin");
+        }
+
+        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new IllegalArgumentException("Ticket not found");
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        // Load assignment by ticket
+        Optional<SupportTicketAssignment> assignmentOpt = supportTicketAssignmentRepository.findByTicket(ticket);
+
+        // Allow closing only if assignment exists and matches current user OR role is ADMINUSER
+        if (assignmentOpt.isEmpty() || 
+            (!assignmentOpt.get().getSupportUser().getMail().equals(currentUser.getMail()) && currentUser.getRole() != Role.ADMINUSER)) {
+            throw new IllegalArgumentException("Access denied: You can only close tickets assigned to you");
+        }
+
+        // In the same transaction:
+        // 1. Create the closing comment
+        TicketComment closingComment = new TicketComment(ticket, currentUser, comment.trim());
+        ticketCommentRepository.save(closingComment);
+
+        // 2. Close the ticket
+        ticket.setTicketState(TicketState.CLOSED);
+        ticket.setClosedDate(java.time.Instant.now());
+        ticket.setUpdateDate(java.time.Instant.now());
+
+        Ticket savedTicket = ticketRepository.save(ticket);
+        return mapToTicketResponseWithAllDetails(savedTicket);
     }
 
     /**

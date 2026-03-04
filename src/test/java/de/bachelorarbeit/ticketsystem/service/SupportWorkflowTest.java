@@ -218,6 +218,31 @@ public class SupportWorkflowTest {
     }
 
     @Test
+    void testCannotReleaseClosedTicket() {
+        Authentication supportAuth = new UsernamePasswordAuthenticationToken(
+                supportUser.getMail(),
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_SUPPORTUSER"))
+        );
+
+        // Assign ticket first
+        ticketService.assignTicketToCurrentSupport(testTicket.getTicketId(), supportAuth);
+
+        // Close the ticket
+        SupportTicketUpdateRequest closeRequest = new SupportTicketUpdateRequest();
+        closeRequest.setTicketState(TicketState.CLOSED);
+        ticketService.updateSupportTicket(testTicket.getTicketId(), closeRequest, supportAuth);
+
+        // Try to release closed ticket - should fail
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            ticketService.releaseTicket(testTicket.getTicketId(), supportAuth);
+        });
+        assertEquals("Closed tickets cannot be released", exception.getMessage());
+
+        System.out.println("[DEBUG_LOG] Correctly prevented release of closed ticket");
+    }
+
+    @Test
     void testUpdateTicketState() {
         Authentication supportAuth = new UsernamePasswordAuthenticationToken(
                 supportUser.getMail(),

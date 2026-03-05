@@ -103,7 +103,6 @@ public class TicketCommentServiceTest {
         assertEquals(testTicket, comment.getTicket());
         assertEquals(testUser, comment.getCommentUser());
         assertEquals("This is a test comment", comment.getComment());
-        assertNotNull(comment.getTc_pk());
         assertNotNull(comment.getCommentDate());
 
         // Save comment

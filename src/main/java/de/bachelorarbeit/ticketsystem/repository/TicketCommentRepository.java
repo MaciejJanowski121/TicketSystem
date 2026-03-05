@@ -2,7 +2,6 @@ package de.bachelorarbeit.ticketsystem.repository;
 
 import de.bachelorarbeit.ticketsystem.model.entity.Ticket;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketComment;
-import de.bachelorarbeit.ticketsystem.model.entity.TicketCommentPk;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +14,7 @@ import java.util.List;
  * Repository for TicketComment entity.
  */
 @Repository
-public interface TicketCommentRepository extends JpaRepository<TicketComment, TicketCommentPk> {
+public interface TicketCommentRepository extends JpaRepository<TicketComment, Long> {
 
     /**
      * Find all comments for a specific ticket.

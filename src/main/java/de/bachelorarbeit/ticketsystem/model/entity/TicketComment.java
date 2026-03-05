@@ -5,26 +5,33 @@ import java.time.Instant;
 
 /**
  * TicketComment entity representing a comment on a ticket.
- * Uses a composite primary key consisting of ticket, commentUser, and commentDate.
+ * Uses a simple primary key with unique constraint on ticket, commentUser, and commentDate.
  */
 @Entity
-@Table(name = "ticket_comment")
+@Table(
+    name = "ticket_comment",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"ticket_id", "comment_email", "comment_date"})
+    }
+)
 public class TicketComment {
 
-    @EmbeddedId
-    private TicketCommentPk tc_pk;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @MapsId("ticketId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id")
+    @JoinColumn(name = "ticket_id", nullable = false)
     private Ticket ticket;
 
-    @MapsId("commentUserMail")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_email", referencedColumnName = "mail")
+    @JoinColumn(name = "comment_email", referencedColumnName = "mail", nullable = false)
     private UserAccount commentUser;
 
-    @Column(nullable = false)
+    @Column(name = "comment_date", nullable = false)
+    private Instant commentDate;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String comment;
 
     // Default constructor required by JPA
@@ -35,17 +42,17 @@ public class TicketComment {
         this.ticket = ticket;
         this.commentUser = commentUser;
         this.comment = comment;
-        this.tc_pk = new TicketCommentPk(ticket.getTicketId(), commentUser.getMail(), Instant.now());
+        this.commentDate = Instant.now();
     }
 
     // Getters and setters
 
-    public TicketCommentPk getTc_pk() {
-        return tc_pk;
+    public Long getId() {
+        return id;
     }
 
-    public void setTc_pk(TicketCommentPk tc_pk) {
-        this.tc_pk = tc_pk;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Ticket getTicket() {
@@ -73,13 +80,16 @@ public class TicketComment {
     }
 
     public Instant getCommentDate() {
-        return tc_pk.getCommentDate();
+        return commentDate;
     }
+
+
 
     @Override
     public String toString() {
         return "TicketComment{" +
-                "tc_pk=" + tc_pk +
+                "id=" + id +
+                ", commentDate=" + commentDate +
                 ", comment='" + comment + '\'' +
                 '}';
     }

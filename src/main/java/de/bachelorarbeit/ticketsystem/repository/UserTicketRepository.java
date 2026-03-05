@@ -3,7 +3,6 @@ package de.bachelorarbeit.ticketsystem.repository;
 import de.bachelorarbeit.ticketsystem.model.entity.Ticket;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
 import de.bachelorarbeit.ticketsystem.model.entity.UserTicket;
-import de.bachelorarbeit.ticketsystem.model.entity.UserTicketPk;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +13,7 @@ import java.util.Optional;
  * Repository for UserTicket entity.
  */
 @Repository
-public interface UserTicketRepository extends JpaRepository<UserTicket, UserTicketPk> {
+public interface UserTicketRepository extends JpaRepository<UserTicket, Long> {
 
     /**
      * Find a user ticket by ticket and end user.

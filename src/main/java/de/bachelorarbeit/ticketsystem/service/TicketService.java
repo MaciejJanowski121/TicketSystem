@@ -14,7 +14,6 @@ import de.bachelorarbeit.ticketsystem.model.entity.TicketComment;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketState;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
 import de.bachelorarbeit.ticketsystem.model.entity.UserTicket;
-import de.bachelorarbeit.ticketsystem.model.entity.UserTicketPk;
 import de.bachelorarbeit.ticketsystem.repository.SupportTicketAssignmentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketCommentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketRepository;
@@ -157,33 +156,22 @@ public class TicketService {
      */
     @Transactional
     public TicketResponse getMyTicketById(Long ticketId, Authentication authentication) {
+
         UserAccount currentUser = getCurrentUser(authentication);
 
-        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
-        if (ticketOpt.isEmpty()) {
-            throw new IllegalArgumentException("Ticket not found");
-        }
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket not found"));
 
-        Ticket ticket = ticketOpt.get();
-
-        // Check if the ticket belongs to the current user
         if (!ticket.getEndUser().equals(currentUser)) {
             throw new IllegalArgumentException("Access denied: Ticket does not belong to current user");
         }
 
-        // Update or create UserTicket record to track lastViewed
-        // Use existsById with EmbeddedId for idempotent upsert logic
-        UserTicketPk userTicketPk = new UserTicketPk(ticketId, currentUser.getMail());
-        if (userTicketRepository.existsById(userTicketPk)) {
-            // Load existing UserTicket and update lastViewed
-            UserTicket userTicket = userTicketRepository.findById(userTicketPk).get();
-            userTicket.updateLastViewed();
-            userTicketRepository.save(userTicket);
-        } else {
-            // Create new UserTicket with proper PK and entity fields
-            UserTicket userTicket = new UserTicket(ticket, currentUser);
-            userTicketRepository.save(userTicket);
-        }
+        UserTicket userTicket = userTicketRepository
+                .findByTicketAndEndUser(ticket, currentUser)
+                .orElseGet(() -> new UserTicket(ticket, currentUser));
+
+        userTicket.updateLastViewed();
+        userTicketRepository.save(userTicket);
 
         return mapToTicketResponse(ticket);
     }

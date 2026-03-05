@@ -5,23 +5,27 @@ import java.time.Instant;
 
 /**
  * UserTicket entity representing the last time an end user viewed a ticket.
- * Uses a composite primary key consisting of ticket and endUser.
+ * Uses a simple primary key with unique constraint on ticket and endUser.
  */
 @Entity
-@Table(name = "user_tickets")
+@Table(
+    name = "user_tickets",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"ticket_id", "enduser_mail"})
+    }
+)
 public class UserTicket {
 
-    @EmbeddedId
-    private UserTicketPk id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @MapsId("ticketId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id")
+    @JoinColumn(name = "ticket_id", nullable = false)
     private Ticket ticket;
 
-    @MapsId("endUserMail")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enduser_mail", referencedColumnName = "mail")
+    @JoinColumn(name = "enduser_mail", referencedColumnName = "mail", nullable = false)
     private UserAccount endUser;
 
     @Column(nullable = false)
@@ -34,17 +38,16 @@ public class UserTicket {
     public UserTicket(Ticket ticket, UserAccount endUser) {
         this.ticket = ticket;
         this.endUser = endUser;
-        this.id = new UserTicketPk(ticket.getTicketId(), endUser.getMail());
         this.lastViewed = Instant.now();
     }
 
     // Getters and setters
 
-    public UserTicketPk getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(UserTicketPk id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

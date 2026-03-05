@@ -1,7 +1,6 @@
 package de.bachelorarbeit.ticketsystem.repository;
 
 import de.bachelorarbeit.ticketsystem.model.entity.SupportTicketAssignment;
-import de.bachelorarbeit.ticketsystem.model.entity.SupportTicketAssignmentPk;
 import de.bachelorarbeit.ticketsystem.model.entity.Ticket;
 import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +16,7 @@ import java.util.Optional;
  * Repository for SupportTicketAssignment entity.
  */
 @Repository
-public interface SupportTicketAssignmentRepository extends JpaRepository<SupportTicketAssignment, SupportTicketAssignmentPk> {
+public interface SupportTicketAssignmentRepository extends JpaRepository<SupportTicketAssignment, Long> {
 
     /**
      * Find a support ticket assignment by ticket and support user.

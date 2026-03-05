@@ -116,14 +116,14 @@ public class ForeignKeyConstraintTest {
         // Try to create TicketComment directly
         TicketComment comment = new TicketComment(testTicket, testUser, "Direct creation test");
 
-        System.out.println("[DEBUG_LOG] TicketComment created with ticket ID in composite key: " + comment.getTc_pk().getTicketId());
+        System.out.println("[DEBUG_LOG] TicketComment created with ticket ID: " + comment.getTicket().getTicketId());
 
         // Save the comment
         TicketComment savedComment = ticketCommentRepository.save(comment);
 
         assertNotNull(savedComment);
-        assertEquals(testTicket.getTicketId(), savedComment.getTc_pk().getTicketId());
-        System.out.println("[DEBUG_LOG] Successfully saved comment directly with ticket ID: " + savedComment.getTc_pk().getTicketId());
+        assertEquals(testTicket.getTicketId(), savedComment.getTicket().getTicketId());
+        System.out.println("[DEBUG_LOG] Successfully saved comment directly with ticket ID: " + savedComment.getTicket().getTicketId());
     }
 
     @Test

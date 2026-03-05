@@ -3,19 +3,27 @@ package de.bachelorarbeit.ticketsystem.model.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * SupportTicketAssignment entity representing the assignment of a support user to a ticket.
+ * Uses a simple primary key with unique constraint on ticket and supportUser.
+ */
 @Entity
-@Table(name = "support_ticket_assignment")
+@Table(
+    name = "support_ticket_assignment",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"ticket_id", "support_user_mail"})
+    }
+)
 public class SupportTicketAssignment {
 
-    @EmbeddedId
-    private SupportTicketAssignmentPk sta_pk;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @MapsId("ticketId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ticket_id", nullable = false)
     private Ticket ticket;
 
-    @MapsId("supportUserMail")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "support_user_mail", referencedColumnName = "mail", nullable = false)
     private UserAccount supportUser;
@@ -30,16 +38,17 @@ public class SupportTicketAssignment {
     public SupportTicketAssignment(Ticket ticket, UserAccount supportUser) {
         this.ticket = ticket;
         this.supportUser = supportUser;
-        this.sta_pk = new SupportTicketAssignmentPk(ticket.getTicketId(), supportUser.getMail());
         this.lastViewed = Instant.now();
     }
 
-    public SupportTicketAssignmentPk getSta_pk() {
-        return sta_pk;
+    // Getters and setters
+
+    public Long getId() {
+        return id;
     }
 
-    public void setSta_pk(SupportTicketAssignmentPk sta_pk) {
-        this.sta_pk = sta_pk;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Ticket getTicket() {
@@ -73,7 +82,7 @@ public class SupportTicketAssignment {
     @Override
     public String toString() {
         return "SupportTicketAssignment{" +
-                "sta_pk=" + sta_pk +
+                "id=" + id +
                 ", lastViewed=" + lastViewed +
                 '}';
     }

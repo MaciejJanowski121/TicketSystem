@@ -1,0 +1,214 @@
+/* User Management page specific styles */
+
+.loading-message {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-size: 1.125rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state h3 {
+  color: #374151;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+/* Users table */
+.users-table-container {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background: #f9fafb;
+}
+
+.users-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.users-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+}
+
+.users-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.users-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.users-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+  vertical-align: middle;
+}
+
+/* Username cell */
+.user-username-cell {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* Email cell */
+.user-email-cell {
+  color: #6b7280;
+  font-family: 'Courier New', monospace;
+}
+
+/* Role cell */
+.user-role-cell {
+  text-align: center;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.role-enduser {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.role-supportuser {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.role-adminuser {
+  background-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Actions cell */
+.user-actions-cell {
+  min-width: 200px;
+}
+
+.role-select {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.role-select:hover:not(:disabled) {
+  border-color: #9ca3af;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.role-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}
+
+.update-loading {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Error message */
+.message {
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.message.error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .users-table-container {
+    overflow-x: auto;
+  }
+
+  .users-table {
+    min-width: 600px;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 0.75rem;
+  }
+
+  .role-select {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1.25rem;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 0.5rem;
+  }
+
+  .role-select {
+    min-width: 100px;
+    font-size: 0.8125rem;
+  }
+}

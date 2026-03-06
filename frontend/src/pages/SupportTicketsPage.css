@@ -1,5 +1,12 @@
 /* Support Tickets page specific styles */
 
+/* Wider container for better dashboard integration */
+.tickets-page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
 /* Tab Navigation */
 .tab-navigation {
   display: flex;
@@ -192,8 +199,8 @@
 }
 
 .state-unassigned {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #f3f4f6;
+  color: #4b5563;
 }
 
 .state-in-progress {

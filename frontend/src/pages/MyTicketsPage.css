@@ -1,5 +1,12 @@
 /* My Tickets page specific styles */
 
+/* Wider container for better dashboard integration */
+.tickets-page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
 .loading-message {
   text-align: center;
   padding: 2rem;
@@ -76,8 +83,9 @@
 /* Tickets grid */
 .tickets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 2rem;
+  max-width: none;
 }
 
 .ticket-card {
@@ -126,8 +134,8 @@
 }
 
 .state-unassigned {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #f3f4f6;
+  color: #4b5563;
 }
 
 .state-in-progress {
@@ -270,4 +278,3 @@
     opacity: 0.7;
   }
 }
-

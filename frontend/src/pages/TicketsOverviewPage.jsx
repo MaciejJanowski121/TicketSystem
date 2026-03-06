@@ -16,48 +16,48 @@ function TicketsOverviewPage() {
 
   // Status filter options
   const statusOptions = [
-    { value: 'All', label: 'All' },
-    { value: 'UNASSIGNED', label: 'Unassigned' },
-    { value: 'IN_PROGRESS', label: 'In Progress' },
-    { value: 'CLOSED', label: 'Closed' }
+    { value: 'All', label: 'Alle' },
+    { value: 'UNASSIGNED', label: 'Nicht zugeordnet' },
+    { value: 'IN_PROGRESS', label: 'In Bearbeitung' },
+    { value: 'CLOSED', label: 'Abgeschlossen' }
   ];
 
   // Category filter options
   const categoryOptions = [
-    { value: 'All', label: 'All' },
-    { value: 'ACCOUNT_MANAGEMENT', label: 'Account Management' },
+    { value: 'All', label: 'Alle' },
+    { value: 'ACCOUNT_MANAGEMENT', label: 'Konto-Management' },
     { value: 'HARDWARE', label: 'Hardware' },
-    { value: 'PROGRAMS_TOOLS', label: 'Programs & Tools' },
-    { value: 'NETWORK', label: 'Network' },
-    { value: 'OTHER', label: 'Other' }
+    { value: 'PROGRAMS_TOOLS', label: 'Programme und Tools' },
+    { value: 'NETWORK', label: 'Netzwerk' },
+    { value: 'OTHER', label: 'Sonstiges' }
   ];
 
   // Sort field options
   const sortFieldOptions = [
-    { value: 'updateDate', label: 'Last Updated' },
-    { value: 'createDate', label: 'Created Date' }
+    { value: 'updateDate', label: 'Zuletzt aktualisiert' },
+    { value: 'createDate', label: 'Erstellungsdatum' }
   ];
 
   // Sort direction options
   const sortDirectionOptions = [
-    { value: 'DESC', label: 'Newest First' },
-    { value: 'ASC', label: 'Oldest First' }
+    { value: 'DESC', label: 'Neueste zuerst' },
+    { value: 'ASC', label: 'Älteste zuerst' }
   ];
 
   // Category display names
   const categoryNames = {
-    'ACCOUNT_MANAGEMENT': 'Account Management',
+    'ACCOUNT_MANAGEMENT': 'Konto-Management',
     'HARDWARE': 'Hardware',
-    'PROGRAMS_TOOLS': 'Programs & Tools',
-    'NETWORK': 'Network',
-    'OTHER': 'Other'
+    'PROGRAMS_TOOLS': 'Programme und Tools',
+    'NETWORK': 'Netzwerk',
+    'OTHER': 'Sonstiges'
   };
 
   // State display names
   const stateNames = {
-    'UNASSIGNED': 'Unassigned',
-    'IN_PROGRESS': 'In Progress',
-    'CLOSED': 'Closed'
+    'UNASSIGNED': 'nicht zugeordnet',
+    'IN_PROGRESS': 'in Bearbeitung',
+    'CLOSED': 'abgeschlossen'
   };
 
   // Debounced search effect
@@ -121,10 +121,10 @@ function TicketsOverviewPage() {
         navigate('/login');
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to load tickets');
+        setError(errorData.message || 'Fehler beim Laden der Tickets');
       }
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
+      setError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
@@ -180,9 +180,9 @@ function TicketsOverviewPage() {
   if (isLoading) {
     return (
       <div className="page">
-        <div className="container">
-          <h1>All Tickets</h1>
-          <div className="loading-message">Loading tickets...</div>
+        <div className="tickets-page-container">
+          <h1>Alle Tickets</h1>
+          <div className="loading-message">Tickets werden geladen...</div>
         </div>
       </div>
     );
@@ -190,8 +190,8 @@ function TicketsOverviewPage() {
 
   return (
     <div className="page">
-      <div className="container">
-        <h1>All Tickets</h1>
+      <div className="tickets-page-container">
+        <h1>Alle Tickets</h1>
 
         {error && (
           <div className="message error">
@@ -201,13 +201,13 @@ function TicketsOverviewPage() {
 
         <div className="filters-section">
           <div className="filter-group">
-            <label htmlFor="searchInput">Search:</label>
+            <label htmlFor="searchInput">Suchen:</label>
             <input
               id="searchInput"
               type="text"
               value={searchTerm}
               onChange={handleSearchChange}
-              placeholder="Search tickets, creators, or assigned support..."
+              placeholder="Tickets, Ersteller oder zugewiesenen Support suchen..."
               className="filter-input"
             />
           </div>
@@ -229,7 +229,7 @@ function TicketsOverviewPage() {
           </div>
 
           <div className="filter-group">
-            <label htmlFor="categoryFilter">Category:</label>
+            <label htmlFor="categoryFilter">Kategorie:</label>
             <select
               id="categoryFilter"
               value={categoryFilter}
@@ -245,7 +245,7 @@ function TicketsOverviewPage() {
           </div>
 
           <div className="filter-group">
-            <label htmlFor="sortField">Sort by:</label>
+            <label htmlFor="sortField">Sortieren nach:</label>
             <select
               id="sortField"
               value={sortField}
@@ -261,7 +261,7 @@ function TicketsOverviewPage() {
           </div>
 
           <div className="filter-group">
-            <label htmlFor="sortDirection">Order:</label>
+            <label htmlFor="sortDirection">Reihenfolge:</label>
             <select
               id="sortDirection"
               value={sortDirection}
@@ -279,19 +279,19 @@ function TicketsOverviewPage() {
 
         {tickets.length === 0 ? (
           <div className="empty-state">
-            <h3>No tickets found</h3>
-            <p>No tickets match the current filter criteria.</p>
+            <h3>Keine Tickets gefunden</h3>
+            <p>Keine Tickets entsprechen den aktuellen Filterkriterien.</p>
           </div>
         ) : (
           <div className="tickets-table-container">
             <table className="tickets-table">
               <thead>
                 <tr>
-                  <th>Title</th>
-                  <th>Creator</th>
+                  <th>Titel</th>
+                  <th>Ersteller</th>
                   <th>Status</th>
-                  <th>Category</th>
-                  <th>{sortField === 'createDate' ? 'Created' : 'Updated'}</th>
+                  <th>Kategorie</th>
+                  <th>{sortField === 'createDate' ? 'Erstellt' : 'Aktualisiert'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -306,7 +306,7 @@ function TicketsOverviewPage() {
                       </span>
                     </td>
                     <td className="ticket-creator-cell">
-                      {ticket.creatorUsername || 'Unknown'}
+                      {ticket.creatorUsername || 'Unbekannt'}
                     </td>
                     <td className="ticket-status-cell">
                       <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>

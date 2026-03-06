@@ -12,37 +12,20 @@ function HomePage() {
     <div className="page">
       <div className="container">
         <div className="home-hero">
-          <h1>Welcome to TicketSystem</h1>
+          <h1>Willkommen im TicketSystem</h1>
           <p className="hero-description">
-            Our TicketSystem is a comprehensive platform designed to streamline 
-            customer support and issue management. Whether you need to report a bug, 
-            request a feature, or get technical assistance, our system makes it easy 
-            to track and resolve your concerns efficiently.
+            Unser TicketSystem ist eine umfassende Plattform zur Optimierung 
+            des Kundensupports und der Problemverwaltung. Ob Sie einen Fehler melden, 
+            eine Funktion anfordern oder technische Unterstützung benötigen – unser System 
+            macht es einfach, Ihre Anliegen effizient zu verfolgen und zu lösen.
           </p>
           <p className="hero-subtitle">
-            Get started by creating an account to submit tickets, track their progress, 
-            and communicate directly with our support team.
+            Beginnen Sie, indem Sie ein Konto erstellen, um Tickets einzureichen, deren Fortschritt 
+            zu verfolgen und direkt mit unserem Support-Team zu kommunizieren.
           </p>
         </div>
 
-        <div className="features-grid">
-          <div className="card feature-card">
-            <h3>Easy Ticket Creation</h3>
-            <p>Submit support requests quickly with our intuitive ticket creation system.</p>
-          </div>
-
-          <div className="card feature-card">
-            <h3>Real-time Tracking</h3>
-            <p>Monitor the progress of your tickets and receive updates in real-time.</p>
-          </div>
-
-          <div className="card feature-card">
-            <h3>Secure Communication</h3>
-            <p>Communicate securely with our support team through encrypted channels.</p>
-          </div>
-        </div>
-
-        {/* Help & Wiki Section */}
+        {/* Help & Wiki Section - Moved up for better visibility */}
         <div className="help-section">
           <div className="help-header" onClick={toggleHelp}>
             <h2>Hilfe & Erklärung – Ticket-System</h2>
@@ -138,6 +121,23 @@ function HomePage() {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="features-grid">
+          <div className="card feature-card">
+            <h3>Einfache Ticket-Erstellung</h3>
+            <p>Reichen Sie Support-Anfragen schnell mit unserem intuitiven Ticket-Erstellungssystem ein.</p>
+          </div>
+
+          <div className="card feature-card">
+            <h3>Echtzeit-Verfolgung</h3>
+            <p>Verfolgen Sie den Fortschritt Ihrer Tickets und erhalten Sie Updates in Echtzeit.</p>
+          </div>
+
+          <div className="card feature-card">
+            <h3>Sichere Kommunikation</h3>
+            <p>Kommunizieren Sie sicher mit unserem Support-Team über verschlüsselte Kanäle.</p>
+          </div>
         </div>
       </div>
     </div>

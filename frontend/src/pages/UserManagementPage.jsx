@@ -12,16 +12,16 @@ function UserManagementPage() {
 
   // Role options
   const roleOptions = [
-    { value: 'ENDUSER', label: 'End User' },
-    { value: 'SUPPORTUSER', label: 'Support User' },
-    { value: 'ADMINUSER', label: 'Admin User' }
+    { value: 'ENDUSER', label: 'Endbenutzer' },
+    { value: 'SUPPORTUSER', label: 'Support-Benutzer' },
+    { value: 'ADMINUSER', label: 'Administrator' }
   ];
 
   // Role display names
   const roleNames = {
-    'ENDUSER': 'End User',
-    'SUPPORTUSER': 'Support User',
-    'ADMINUSER': 'Admin User'
+    'ENDUSER': 'Endbenutzer',
+    'SUPPORTUSER': 'Support-Benutzer',
+    'ADMINUSER': 'Administrator'
   };
 
   // Check authorization on component mount
@@ -70,10 +70,10 @@ function UserManagementPage() {
         navigate('/');
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to load users');
+        setError(errorData.message || 'Fehler beim Laden der Benutzer');
       }
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
+      setError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
@@ -104,10 +104,10 @@ function UserManagementPage() {
         fetchUsers();
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to update user role');
+        setError(errorData.message || 'Fehler beim Aktualisieren der Benutzerrolle');
       }
     } catch (error) {
-      setError('Network error while updating user role.');
+      setError('Netzwerkfehler beim Aktualisieren der Benutzerrolle.');
     } finally {
       setUpdateLoading(prev => ({ ...prev, [userMail]: false }));
     }
@@ -116,9 +116,9 @@ function UserManagementPage() {
   if (isLoading) {
     return (
       <div className="page">
-        <div className="container">
-          <h1>User Management</h1>
-          <div className="loading-message">Loading users...</div>
+        <div className="tickets-page-container">
+          <h1>Benutzerverwaltung</h1>
+          <div className="loading-message">Benutzer werden geladen...</div>
         </div>
       </div>
     );
@@ -126,8 +126,8 @@ function UserManagementPage() {
 
   return (
     <div className="page">
-      <div className="container">
-        <h1>User Management</h1>
+      <div className="tickets-page-container">
+        <h1>Benutzerverwaltung</h1>
 
         {error && (
           <div className="message error">
@@ -137,18 +137,18 @@ function UserManagementPage() {
 
         {users.length === 0 ? (
           <div className="empty-state">
-            <h3>No users found</h3>
-            <p>No users are currently registered in the system.</p>
+            <h3>Keine Benutzer gefunden</h3>
+            <p>Derzeit sind keine Benutzer im System registriert.</p>
           </div>
         ) : (
           <div className="users-table-container">
             <table className="users-table">
               <thead>
                 <tr>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Current Role</th>
-                  <th>Actions</th>
+                  <th>Benutzername</th>
+                  <th>E-Mail</th>
+                  <th>Aktuelle Rolle</th>
+                  <th>Aktionen</th>
                 </tr>
               </thead>
               <tbody>
@@ -183,7 +183,7 @@ function UserManagementPage() {
                         ))}
                       </select>
                       {updateLoading[user.mail] && (
-                        <span className="update-loading">Updating...</span>
+                        <span className="update-loading">Wird aktualisiert...</span>
                       )}
                     </td>
                   </tr>

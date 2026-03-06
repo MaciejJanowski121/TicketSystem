@@ -34,12 +34,12 @@ function LoginPage() {
 
     // Login validation
     if (!formData.login.trim()) {
-      newErrors.login = 'Username or email is required';
+      newErrors.login = 'Benutzername oder E-Mail ist erforderlich';
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Passwort ist erforderlich';
     }
 
     return newErrors;
@@ -77,7 +77,7 @@ function LoginPage() {
         setToken(data.token);
 
         setIsSuccess(true);
-        setMessage('Login successful!');
+        setMessage('Anmeldung erfolgreich!');
 
         // Redirect to home page after a brief delay
         setTimeout(() => {
@@ -90,40 +90,43 @@ function LoginPage() {
         if (response.status === 400 && data.errors) {
           // Validation errors - set field-specific errors
           setErrors(data.errors);
-          setMessage(data.message || 'Please fix the validation errors below.');
+          setMessage(data.message || 'Bitte beheben Sie die Validierungsfehler unten.');
         } else if (response.status === 401) {
-          setMessage(data.message || 'Invalid credentials. Please try again.');
+          setMessage(data.message || 'Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.');
         } else if (response.status === 409) {
-          setMessage(data.message || 'Conflict occurred. Please try again.');
+          setMessage(data.message || 'Konflikt aufgetreten. Bitte versuchen Sie es erneut.');
         } else if (response.status === 500) {
-          setMessage(data.message || 'Server error occurred. Please try again later.');
+          setMessage(data.message || 'Serverfehler aufgetreten. Bitte versuchen Sie es später erneut.');
         } else {
-          setMessage(data.message || 'Login failed. Please try again.');
+          setMessage(data.message || 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.');
         }
       }
     } catch (error) {
       setIsSuccess(false);
-      setMessage('Network error. Please check your connection and try again.');
+      setMessage('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="page-centered">
-      <div className="container-narrow">
-        <div className="card card-narrow">
-          <h1>Login</h1>
+    <div className="page-dashboard">
+      <div className="content-section">
+        <div className="page-header">
+          <h1>Anmelden</h1>
+          <p>Melden Sie sich an, um auf Ihr TicketSystem-Konto zuzugreifen</p>
+        </div>
 
+        <div className="card">
           {message && (
             <div className={`message ${isSuccess ? 'success' : 'error'}`}>
               {message}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="form">
+          <form onSubmit={handleSubmit} className="form login-form">
             <div className="form-group">
-              <label htmlFor="login">Username or Email</label>
+              <label htmlFor="login">Benutzername oder E-Mail</label>
               <input
                 type="text"
                 id="login"
@@ -132,13 +135,13 @@ function LoginPage() {
                 onChange={handleChange}
                 className={errors.login ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter your username or email"
+                placeholder="Geben Sie Ihren Benutzernamen oder E-Mail ein"
               />
               {errors.login && <span className="error-text">{errors.login}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">Passwort</label>
               <input
                 type="password"
                 id="password"
@@ -147,7 +150,7 @@ function LoginPage() {
                 onChange={handleChange}
                 className={errors.password ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter your password"
+                placeholder="Geben Sie Ihr Passwort ein"
               />
               {errors.password && <span className="error-text">{errors.password}</span>}
             </div>
@@ -157,7 +160,7 @@ function LoginPage() {
               className="btn btn-primary btn-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Logging in...' : 'Login'}
+              {isLoading ? 'Anmelden...' : 'Anmelden'}
             </button>
           </form>
         </div>

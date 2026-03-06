@@ -77,15 +77,15 @@ function MyTicketDetailPage() {
         window.dispatchEvent(new Event('authStateChange'));
         navigate('/login');
       } else if (response.status === 403) {
-        setError('Access denied: This ticket does not belong to you.');
+        setError('Zugriff verweigert: Dieses Ticket gehört nicht zu Ihnen.');
       } else if (response.status === 404) {
-        setError('Ticket not found.');
+        setError('Ticket nicht gefunden.');
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to load ticket details');
+        setError(errorData.message || 'Fehler beim Laden der Ticket-Details');
       }
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
+      setError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
@@ -119,15 +119,15 @@ function MyTicketDetailPage() {
         window.dispatchEvent(new Event('authStateChange'));
         navigate('/login');
       } else if (response.status === 403) {
-        setCommentError('Access denied: You cannot view comments on this ticket.');
+        setCommentError('Zugriff verweigert: Sie können die Kommentare zu diesem Ticket nicht anzeigen.');
       } else if (response.status === 404) {
-        setCommentError('Ticket not found.');
+        setCommentError('Ticket nicht gefunden.');
       } else {
         const errorData = await response.json();
-        setCommentError(errorData.message || 'Failed to load comments');
+        setCommentError(errorData.message || 'Fehler beim Laden der Kommentare');
       }
     } catch (error) {
-      setCommentError('Network error. Please check your connection and try again.');
+      setCommentError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setCommentsLoading(false);
     }
@@ -137,7 +137,7 @@ function MyTicketDetailPage() {
     e.preventDefault();
 
     if (!commentText.trim()) {
-      setCommentError('Comment cannot be empty.');
+      setCommentError('Kommentar darf nicht leer sein.');
       return;
     }
 
@@ -172,15 +172,15 @@ function MyTicketDetailPage() {
         window.dispatchEvent(new Event('authStateChange'));
         navigate('/login');
       } else if (response.status === 403) {
-        setCommentError('Access denied: You cannot comment on this ticket.');
+        setCommentError('Zugriff verweigert: Sie können dieses Ticket nicht kommentieren.');
       } else if (response.status === 404) {
-        setCommentError('Ticket not found.');
+        setCommentError('Ticket nicht gefunden.');
       } else {
         const errorData = await response.json();
-        setCommentError(errorData.message || 'Failed to create comment');
+        setCommentError(errorData.message || 'Fehler beim Erstellen des Kommentars');
       }
     } catch (error) {
-      setCommentError('Network error. Please check your connection and try again.');
+      setCommentError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setCommentSubmitting(false);
     }
@@ -215,10 +215,10 @@ function MyTicketDetailPage() {
         <div className="container">
           <div className="ticket-detail-header">
             <Link to="/my-tickets" className="back-link">
-              ← Back to My Tickets
+              ← Zurück zu Meine Tickets
             </Link>
           </div>
-          <div className="loading-message">Loading ticket details...</div>
+          <div className="loading-message">Ticket-Details werden geladen...</div>
         </div>
       </div>
     );
@@ -230,7 +230,7 @@ function MyTicketDetailPage() {
         <div className="container">
           <div className="ticket-detail-header">
             <Link to="/my-tickets" className="back-link">
-              ← Back to My Tickets
+              ← Zurück zu Meine Tickets
             </Link>
           </div>
           <div className="message error">
@@ -247,11 +247,11 @@ function MyTicketDetailPage() {
         <div className="container">
           <div className="ticket-detail-header">
             <Link to="/my-tickets" className="back-link">
-              ← Back to My Tickets
+              ← Zurück zu Meine Tickets
             </Link>
           </div>
           <div className="message error">
-            Ticket not found.
+            Ticket nicht gefunden.
           </div>
         </div>
       </div>
@@ -263,9 +263,9 @@ function MyTicketDetailPage() {
       <div className="container">
         <div className="ticket-detail-header">
           <Link to="/my-tickets" className="back-link">
-            ← Back to My Tickets
+            ← Zurück zu Meine Tickets
           </Link>
-          <h1>Ticket Details</h1>
+          <h1>Ticket-Details</h1>
         </div>
 
         <div className="ticket-detail-card">
@@ -283,7 +283,7 @@ function MyTicketDetailPage() {
 
           <div className="ticket-detail-content">
             <div className="ticket-detail-section">
-              <h3>Description</h3>
+              <h3>Beschreibung</h3>
               <div className="ticket-description">
                 {ticket.description}
               </div>
@@ -292,7 +292,7 @@ function MyTicketDetailPage() {
             <div className="ticket-detail-meta">
               <div className="meta-grid">
                 <div className="meta-item">
-                  <strong>Category:</strong>
+                  <strong>Kategorie:</strong>
                   <span>{categoryNames[ticket.ticketCategory] || ticket.ticketCategory}</span>
                 </div>
 
@@ -304,18 +304,18 @@ function MyTicketDetailPage() {
                 </div>
 
                 <div className="meta-item">
-                  <strong>Created:</strong>
+                  <strong>Erstellt:</strong>
                   <span>{formatDate(ticket.createDate)}</span>
                 </div>
 
                 <div className="meta-item">
-                  <strong>Last Updated:</strong>
+                  <strong>Zuletzt aktualisiert:</strong>
                   <span>{formatDate(ticket.updateDate)}</span>
                 </div>
 
                 {ticket.assignedSupport && (
                   <div className="meta-item">
-                    <strong>Assigned to:</strong>
+                    <strong>Zugewiesen an:</strong>
                     <span>{ticket.assignedSupport}</span>
                   </div>
                 )}
@@ -323,7 +323,7 @@ function MyTicketDetailPage() {
             </div>
 
             <div className="ticket-detail-section">
-              <h3>Comments</h3>
+              <h3>Kommentare</h3>
 
               {commentError && (
                 <div className="message error">
@@ -332,25 +332,30 @@ function MyTicketDetailPage() {
               )}
 
               {commentsLoading ? (
-                <div className="loading-message">Loading comments...</div>
+                <div className="loading-message">Kommentare werden geladen...</div>
               ) : (
                 <div className="comments-section">
                   {comments.length === 0 ? (
-                    <p className="no-comments">No comments yet.</p>
+                    <p className="no-comments">Noch keine Kommentare.</p>
                   ) : (
                     <div className="comments-list">
                       {normalizeComments(comments, 'comments').map((comment, index) => (
                         <div key={index} className="comment-item">
-                          <div className="comment-header">
-                            <span className="comment-author">
-                              {comment.authorUsername}
-                            </span>
-                            <span className="comment-date">
-                              {formatDate(comment.commentDate)}
-                            </span>
+                          <div className="comment-avatar">
+                            {comment.authorUsername ? comment.authorUsername.charAt(0).toUpperCase() : 'U'}
                           </div>
-                          <div className="comment-text">
-                            {comment.comment}
+                          <div className="comment-content">
+                            <div className="comment-header">
+                              <span className="comment-author">
+                                {comment.authorUsername}
+                              </span>
+                              <span className="comment-date">
+                                {formatDate(comment.commentDate)}
+                              </span>
+                            </div>
+                            <div className="comment-text">
+                              {comment.comment}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -362,7 +367,7 @@ function MyTicketDetailPage() {
                       <textarea
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Add a comment..."
+                        placeholder="Kommentar hinzufügen..."
                         rows="4"
                         className="comment-textarea"
                         disabled={commentSubmitting}
@@ -373,7 +378,7 @@ function MyTicketDetailPage() {
                       className="btn btn-primary"
                       disabled={commentSubmitting || !commentText.trim()}
                     >
-                      {commentSubmitting ? 'Adding Comment...' : 'Add Comment'}
+                      {commentSubmitting ? 'Kommentar wird hinzugefügt...' : 'Kommentar hinzufügen'}
                     </button>
                   </form>
                 </div>

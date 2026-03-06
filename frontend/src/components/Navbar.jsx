@@ -86,14 +86,14 @@ function Navbar() {
             to="/" 
             className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
           >
-            Home
+            Startseite
           </NavLink>
           {userLoggedIn && userRole === 'ENDUSER' && (
             <NavLink 
               to="/my-tickets" 
               className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
             >
-              My Tickets
+              Meine Tickets
             </NavLink>
           )}
           {userLoggedIn && userRole === 'ENDUSER' && (
@@ -101,7 +101,7 @@ function Navbar() {
               to="/tickets/new" 
               className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
             >
-              Create Ticket
+              Ticket erstellen
             </NavLink>
           )}
           {userLoggedIn && (userRole === 'SUPPORTUSER' || userRole === 'ADMINUSER') && (
@@ -109,7 +109,7 @@ function Navbar() {
               to="/support/tickets" 
               className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
             >
-              Support Panel
+              Support-Bereich
             </NavLink>
           )}
           {userLoggedIn && userRole === 'ADMINUSER' && (
@@ -117,7 +117,7 @@ function Navbar() {
               to="/admin/users" 
               className={({ isActive }) => `navbar-nav-link ${isActive ? 'active' : ''}`}
             >
-              User Management
+              Benutzerverwaltung
             </NavLink>
           )}
         </div>
@@ -129,7 +129,7 @@ function Navbar() {
               <div className="user-info">
                 {username && (
                   <span className="signed-in-text">
-                    Signed in as <strong>{username}</strong>
+                    Angemeldet als <strong>{username}</strong>
                   </span>
                 )}
                 <button 
@@ -137,7 +137,7 @@ function Navbar() {
                   onClick={toggleAccountDropdown}
                   aria-expanded={showAccountDropdown}
                 >
-                  Account
+                  Konto
                   <span className={`dropdown-arrow ${showAccountDropdown ? 'open' : ''}`}>
                     ▼
                   </span>
@@ -151,13 +151,13 @@ function Navbar() {
                     className="dropdown-item"
                     onClick={() => setShowAccountDropdown(false)}
                   >
-                    Change Password
+                    Passwort ändern
                   </NavLink>
                   <button 
                     onClick={handleLogout} 
                     className="dropdown-item logout-item"
                   >
-                    Logout
+                    Abmelden
                   </button>
                 </div>
               )}
@@ -165,10 +165,10 @@ function Navbar() {
           ) : (
             <div className="auth-links">
               <NavLink to="/login" className="navbar-auth-link">
-                Login
+                Anmelden
               </NavLink>
               <NavLink to="/register" className="navbar-auth-link">
-                Register
+                Registrieren
               </NavLink>
             </div>
           )}

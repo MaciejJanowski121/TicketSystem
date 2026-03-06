@@ -33,28 +33,28 @@ function RegisterPage() {
 
     // Username validation
     if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
+      newErrors.username = 'Benutzername ist erforderlich';
     }
 
     // Email validation
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'E-Mail ist erforderlich';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Bitte geben Sie eine gültige E-Mail-Adresse ein';
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Passwort ist erforderlich';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+      newErrors.password = 'Passwort muss mindestens 8 Zeichen lang sein';
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = 'Bitte bestätigen Sie Ihr Passwort';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Passwörter stimmen nicht überein';
     }
 
     return newErrors;
@@ -90,7 +90,7 @@ function RegisterPage() {
 
       if (response.ok) {
         setIsSuccess(true);
-        setMessage(data.message || 'Registration successful!');
+        setMessage(data.message || 'Registrierung erfolgreich!');
         setFormData({
           username: '',
           email: '',
@@ -104,43 +104,46 @@ function RegisterPage() {
         if (response.status === 400 && data.errors) {
           // Validation errors - set field-specific errors
           setErrors(data.errors);
-          setMessage(data.message || 'Please fix the validation errors below.');
+          setMessage(data.message || 'Bitte beheben Sie die Validierungsfehler unten.');
         } else if (response.status === 409) {
-          setMessage(data.message || 'User already exists. Please try with different credentials.');
+          setMessage(data.message || 'Benutzer existiert bereits. Bitte versuchen Sie es mit anderen Anmeldedaten.');
         } else if (response.status === 500) {
-          setMessage(data.message || 'Server error occurred. Please try again later.');
+          setMessage(data.message || 'Serverfehler aufgetreten. Bitte versuchen Sie es später erneut.');
         } else {
-          setMessage(data.message || 'Registration failed. Please try again.');
+          setMessage(data.message || 'Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.');
         }
       }
     } catch (error) {
       setIsSuccess(false);
-      setMessage('Network error. Please check your connection and try again.');
+      setMessage('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="page-centered">
-      <div className="container-narrow">
-        <div className="card card-narrow">
-          <h1>Register</h1>
+    <div className="page-dashboard">
+      <div className="content-section">
+        <div className="page-header">
+          <h1>Registrieren</h1>
+          <p>Erstellen Sie ein neues Konto, um das TicketSystem zu nutzen</p>
+        </div>
 
+        <div className="card">
           {message && (
             <div className={`message ${isSuccess ? 'success' : 'error'}`}>
               {message}
               {isSuccess && (
                 <p className="success-note">
-                  You can now log in with your credentials.
+                  Sie können sich jetzt mit Ihren Anmeldedaten anmelden.
                 </p>
               )}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="form">
+          <form onSubmit={handleSubmit} className="form register-form">
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username">Benutzername</label>
               <input
                 type="text"
                 id="username"
@@ -149,13 +152,13 @@ function RegisterPage() {
                 onChange={handleChange}
                 className={errors.username ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter your username"
+                placeholder="Geben Sie Ihren Benutzernamen ein"
               />
               {errors.username && <span className="error-text">{errors.username}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">E-Mail</label>
               <input
                 type="email"
                 id="email"
@@ -164,13 +167,13 @@ function RegisterPage() {
                 onChange={handleChange}
                 className={errors.email ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter your email"
+                placeholder="Geben Sie Ihre E-Mail ein"
               />
               {errors.email && <span className="error-text">{errors.email}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">Passwort</label>
               <input
                 type="password"
                 id="password"
@@ -179,13 +182,13 @@ function RegisterPage() {
                 onChange={handleChange}
                 className={errors.password ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter your password"
+                placeholder="Geben Sie Ihr Passwort ein"
               />
               {errors.password && <span className="error-text">{errors.password}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
+              <label htmlFor="confirmPassword">Passwort bestätigen</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -194,7 +197,7 @@ function RegisterPage() {
                 onChange={handleChange}
                 className={errors.confirmPassword ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Confirm your password"
+                placeholder="Bestätigen Sie Ihr Passwort"
               />
               {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
             </div>
@@ -204,7 +207,7 @@ function RegisterPage() {
               className="btn btn-primary btn-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Registering...' : 'Register'}
+              {isLoading ? 'Registrierung läuft...' : 'Registrieren'}
             </button>
           </form>
         </div>

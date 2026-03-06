@@ -44,17 +44,17 @@ function CreateTicketPage() {
 
     // Title validation
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = 'Titel ist erforderlich';
     }
 
     // Description validation
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
+      newErrors.description = 'Beschreibung ist erforderlich';
     }
 
     // Category validation
     if (!formData.ticketCategory) {
-      newErrors.ticketCategory = 'Category is required';
+      newErrors.ticketCategory = 'Kategorie ist erforderlich';
     }
 
     return newErrors;
@@ -73,7 +73,7 @@ function CreateTicketPage() {
     const token = getToken();
     if (!token) {
       setIsSuccess(false);
-      setMessage('You must be logged in to create tickets.');
+      setMessage('Sie müssen angemeldet sein, um Tickets zu erstellen.');
       navigate('/login');
       return;
     }
@@ -82,7 +82,7 @@ function CreateTicketPage() {
     const currentUser = getCurrentUser();
     if (!currentUser || currentUser.role !== 'ENDUSER') {
       setIsSuccess(false);
-      setMessage('You are not authorized to create tickets.');
+      setMessage('Sie sind nicht berechtigt, Tickets zu erstellen.');
       return;
     }
 
@@ -108,13 +108,13 @@ function CreateTicketPage() {
 
       if (response.ok) {
         setIsSuccess(true);
-        setMessage('Ticket created successfully!');
+        setMessage('Ticket erfolgreich erstellt!');
         setFormData({
           title: '',
           description: '',
           ticketCategory: ''
         });
-        
+
         // Optionally navigate to home after success
         setTimeout(() => {
           navigate('/');
@@ -126,9 +126,9 @@ function CreateTicketPage() {
         if (response.status === 400 && data.errors) {
           // Validation errors - set field-specific errors
           setErrors(data.errors);
-          setMessage(data.message || 'Please fix the validation errors below.');
+          setMessage(data.message || 'Bitte beheben Sie die Validierungsfehler unten.');
         } else if (response.status === 401 || response.status === 403) {
-          setMessage('You are not authorized to create tickets.');
+          setMessage('Sie sind nicht berechtigt, Tickets zu erstellen.');
           // If token is invalid, redirect to login
           if (response.status === 401) {
             localStorage.removeItem('token');
@@ -136,39 +136,42 @@ function CreateTicketPage() {
             navigate('/login');
           }
         } else if (response.status === 500) {
-          setMessage('Server error occurred. Please try again later.');
+          setMessage('Serverfehler aufgetreten. Bitte versuchen Sie es später erneut.');
         } else {
-          setMessage(data.message || 'Ticket creation failed. Please try again.');
+          setMessage(data.message || 'Ticket-Erstellung fehlgeschlagen. Bitte versuchen Sie es erneut.');
         }
       }
     } catch (error) {
       setIsSuccess(false);
-      setMessage('Network error. Please check your connection and try again.');
+      setMessage('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="page-centered">
-      <div className="container-narrow">
-        <div className="card card-narrow">
-          <h1>Create Ticket</h1>
+    <div className="page-dashboard">
+      <div className="content-section">
+        <div className="page-header">
+          <h1>Ticket erstellen</h1>
+          <p>Erstellen Sie ein neues Support-Ticket für Ihr Anliegen</p>
+        </div>
 
+        <div className="card">
           {message && (
             <div className={`message ${isSuccess ? 'success' : 'error'}`}>
               {message}
               {isSuccess && (
                 <p className="success-note">
-                  Your ticket has been submitted successfully. You will be redirected to the home page.
+                  Ihr Ticket wurde erfolgreich eingereicht. Sie werden zur Startseite weitergeleitet.
                 </p>
               )}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="form">
+          <form onSubmit={handleSubmit} className="form create-ticket-form">
             <div className="form-group">
-              <label htmlFor="title">Title</label>
+              <label htmlFor="title">Titel</label>
               <input
                 type="text"
                 id="title"
@@ -177,13 +180,13 @@ function CreateTicketPage() {
                 onChange={handleChange}
                 className={errors.title ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter ticket title"
+                placeholder="Titel eingeben"
               />
               {errors.title && <span className="error-text">{errors.title}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="ticketCategory">Category</label>
+              <label htmlFor="ticketCategory">Kategorie</label>
               <select
                 id="ticketCategory"
                 name="ticketCategory"
@@ -192,7 +195,7 @@ function CreateTicketPage() {
                 className={errors.ticketCategory ? 'error' : ''}
                 disabled={isLoading}
               >
-                <option value="">Select a category</option>
+                <option value="">Kategorie auswählen</option>
                 {categoryOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -203,7 +206,7 @@ function CreateTicketPage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="description">Description</label>
+              <label htmlFor="description">Beschreibung</label>
               <textarea
                 id="description"
                 name="description"
@@ -211,7 +214,7 @@ function CreateTicketPage() {
                 onChange={handleChange}
                 className={errors.description ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Describe your issue in detail"
+                placeholder="Beschreiben Sie Ihr Problem im Detail"
                 rows="5"
               />
               {errors.description && <span className="error-text">{errors.description}</span>}
@@ -222,7 +225,7 @@ function CreateTicketPage() {
               className="btn btn-primary btn-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Creating Ticket...' : 'Create Ticket'}
+              {isLoading ? 'Ticket wird erstellt...' : 'Ticket erstellen'}
             </button>
           </form>
         </div>

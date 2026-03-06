@@ -13,10 +13,10 @@ function MyTicketsPage() {
 
   // Filter options
   const filterOptions = [
-    { value: 'ALL', label: 'All Tickets' },
-    { value: 'UNASSIGNED', label: 'Unassigned' },
-    { value: 'IN_PROGRESS', label: 'In Progress' },
-    { value: 'CLOSED', label: 'Closed' }
+    { value: 'ALL', label: 'Alle Tickets' },
+    { value: 'UNASSIGNED', label: 'Nicht zugeordnet' },
+    { value: 'IN_PROGRESS', label: 'In Bearbeitung' },
+    { value: 'CLOSED', label: 'Abgeschlossen' }
   ];
 
   // Category display names
@@ -135,9 +135,9 @@ function MyTicketsPage() {
   if (isLoading) {
     return (
       <div className="page">
-        <div className="container">
-          <h1>My Tickets</h1>
-          <div className="loading-message">Loading tickets...</div>
+        <div className="tickets-page-container">
+          <h1>Meine Tickets</h1>
+          <div className="loading-message">Tickets werden geladen...</div>
         </div>
       </div>
     );
@@ -145,8 +145,8 @@ function MyTicketsPage() {
 
   return (
     <div className="page">
-      <div className="container">
-        <h1>My Tickets</h1>
+      <div className="tickets-page-container">
+        <h1>Meine Tickets</h1>
 
         {error && (
           <div className="message error">
@@ -156,7 +156,7 @@ function MyTicketsPage() {
 
         <div className="tickets-header">
           <div className="filter-section">
-            <label htmlFor="statusFilter">Filter by Status:</label>
+            <label htmlFor="statusFilter">Nach Status filtern:</label>
             <select
               id="statusFilter"
               value={filter}
@@ -177,15 +177,15 @@ function MyTicketsPage() {
 
         {filteredTickets.length === 0 ? (
           <div className="empty-state">
-            <h3>No tickets found</h3>
+            <h3>Keine Tickets gefunden</h3>
             <p>
               {filter === 'ALL' 
-                ? "You haven't created any tickets yet." 
-                : `You have no tickets with status "${filterOptions.find(f => f.value === filter)?.label}".`
+                ? "Sie haben noch keine Tickets erstellt." 
+                : `Sie haben keine Tickets mit dem Status "${filterOptions.find(f => f.value === filter)?.label}".`
               }
             </p>
             <Link to="/tickets/new" className="btn btn-primary">
-              Create Your First Ticket
+              Ihr erstes Ticket erstellen
             </Link>
           </div>
         ) : (
@@ -204,15 +204,15 @@ function MyTicketsPage() {
 
                 <div className="ticket-meta">
                   <div className="ticket-category">
-                    <strong>Category:</strong> {categoryNames[ticket.ticketCategory] || ticket.ticketCategory}
+                    <strong>Kategorie:</strong> {categoryNames[ticket.ticketCategory] || ticket.ticketCategory}
                   </div>
                   <div className="ticket-dates">
-                    <div><strong>Created:</strong> {formatDate(ticket.createDate)}</div>
-                    <div><strong>Updated:</strong> {formatDate(ticket.updateDate)}</div>
+                    <div><strong>Erstellt:</strong> {formatDate(ticket.createDate)}</div>
+                    <div><strong>Zuletzt geändert:</strong> {formatDate(ticket.updateDate)}</div>
                   </div>
                   {ticket.assignedSupport && (
                     <div className="ticket-assigned">
-                      <strong>Assigned to:</strong> {ticket.assignedSupport}
+                      <strong>Zugewiesen an:</strong> {ticket.assignedSupport}
                     </div>
                   )}
                 </div>
@@ -228,7 +228,7 @@ function MyTicketsPage() {
                       }, 100);
                     }}
                   >
-                    View Details
+                    Details anzeigen
                   </Link>
                 </div>
               </div>

@@ -33,15 +33,16 @@ public class AuthController {
      * Register a new user.
      *
      * @param registerRequest the request body containing username, email, and password
-     * @return success message
+     * @return JWT token for the registered user
      */
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        // Register user (we don't need the token for registration response)
-        authService.register(registerRequest.getUsername(), registerRequest.getEmail(), registerRequest.getPassword());
+        // Register user and get JWT token
+        String token = authService.register(registerRequest.getUsername(), registerRequest.getEmail(), registerRequest.getPassword());
 
-        // Return success message
+        // Return token for automatic login
         Map<String, String> response = new HashMap<>();
+        response.put("token", token);
         response.put("message", "User registered successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -94,9 +95,9 @@ public class AuthController {
         if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword())) {
             Map<String, Object> response = new HashMap<>();
             Map<String, String> errors = new HashMap<>();
-            errors.put("confirmPassword", "Passwords do not match");
+            errors.put("confirmPassword", "Passwörter stimmen nicht überein");
 
-            response.put("message", "Validation failed");
+            response.put("message", "Validierung fehlgeschlagen");
             response.put("errors", errors);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -106,17 +107,41 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        // Change password
-        authService.changePassword(
-                username,
-                changePasswordRequest.getCurrentPassword(),
-                changePasswordRequest.getNewPassword(),
-                changePasswordRequest.getConfirmPassword()
-        );
+        try {
+            // Change password
+            authService.changePassword(
+                    username,
+                    changePasswordRequest.getCurrentPassword(),
+                    changePasswordRequest.getNewPassword(),
+                    changePasswordRequest.getConfirmPassword()
+            );
 
-        // Return success message
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Password changed successfully");
-        return ResponseEntity.ok(response);
+            // Return success message
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Passwort erfolgreich geändert");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> response = new HashMap<>();
+            Map<String, String> errors = new HashMap<>();
+
+            // Handle specific error cases with German messages
+            String errorMessage = e.getMessage();
+            if ("Invalid current password".equals(errorMessage)) {
+                errors.put("currentPassword", "Ungültiges aktuelles Passwort");
+                response.put("message", "Ungültiges aktuelles Passwort");
+            } else if ("New password must be different from current password".equals(errorMessage)) {
+                errors.put("newPassword", "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden");
+                response.put("message", "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden");
+            } else if ("Passwords do not match".equals(errorMessage)) {
+                errors.put("confirmPassword", "Passwörter stimmen nicht überein");
+                response.put("message", "Passwörter stimmen nicht überein");
+            } else {
+                // Generic error message for other cases
+                response.put("message", "Passwort-Änderung fehlgeschlagen: " + errorMessage);
+            }
+
+            response.put("errors", errors);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
     }
 }

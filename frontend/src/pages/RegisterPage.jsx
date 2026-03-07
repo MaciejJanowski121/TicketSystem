@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { setToken } from '../utils/auth';
 import './RegisterPage.css';
 
 function RegisterPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -89,14 +92,30 @@ function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setIsSuccess(true);
-        setMessage(data.message || 'Registrierung erfolgreich!');
-        setFormData({
-          username: '',
-          email: '',
-          password: '',
-          confirmPassword: ''
-        });
+        // Check if token is provided for automatic login
+        if (data.token) {
+          // Store the token and set authentication state
+          setToken(data.token);
+
+          // Show brief success message and redirect
+          setIsSuccess(true);
+          setMessage('Registrierung erfolgreich! Sie werden automatisch angemeldet...');
+
+          // Redirect to home page after a short delay
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        } else {
+          // Fallback to old behavior if no token provided
+          setIsSuccess(true);
+          setMessage(data.message || 'Registrierung erfolgreich!');
+          setFormData({
+            username: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+          });
+        }
       } else {
         setIsSuccess(false);
 

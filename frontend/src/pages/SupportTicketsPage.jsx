@@ -196,10 +196,10 @@ function SupportTicketsPage() {
         fetchTickets();
       } else {
         const errorData = await response.json();
-        setError(errorData.message || `Failed to ${action} ticket`);
+        setError(errorData.message || `Fehler beim ${action === 'assign' ? 'Zuweisen' : action === 'unassign' ? 'Aufheben der Zuweisung' : action} des Tickets`);
       }
     } catch (error) {
-      setError(`Network error while trying to ${action} ticket.`);
+      setError(`Netzwerkfehler beim Versuch, das Ticket zu ${action === 'assign' ? 'zuweisen' : action === 'unassign' ? 'entziehen' : action}.`);
     } finally {
       setActionLoading(prev => ({ ...prev, [`${ticketId}-${action}`]: false }));
     }
@@ -319,10 +319,10 @@ function SupportTicketsPage() {
         fetchTickets();
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to update ticket status');
+        setError(errorData.message || 'Fehler beim Aktualisieren des Ticket-Status');
       }
     } catch (error) {
-      setError('Network error while updating ticket status.');
+      setError('Netzwerkfehler beim Aktualisieren des Ticket-Status.');
     } finally {
       setActionLoading(prev => ({ ...prev, [`${ticketId}-update-status`]: false }));
     }
@@ -352,10 +352,10 @@ function SupportTicketsPage() {
         fetchTickets();
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to update ticket category');
+        setError(errorData.message || 'Fehler beim Aktualisieren der Ticket-Kategorie');
       }
     } catch (error) {
-      setError('Network error while updating ticket category.');
+      setError('Netzwerkfehler beim Aktualisieren der Ticket-Kategorie.');
     } finally {
       setActionLoading(prev => ({ ...prev, [`${ticketId}-update-category`]: false }));
     }
@@ -394,7 +394,7 @@ function SupportTicketsPage() {
         fetchTickets();
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to delete ticket');
+        setError(errorData.message || 'Fehler beim Löschen des Tickets');
       }
     } catch (error) {
       setError('Network error while deleting ticket.');
@@ -661,7 +661,7 @@ function SupportTicketsPage() {
             <p>
               You are about to close ticket: <strong>{closeModal.ticketTitle}</strong>
             </p>
-            <p>Please provide a closing comment (required):</p>
+            <p>Bitte geben Sie einen Abschlusskommentar an (erforderlich):</p>
             <textarea
               value={closeComment}
               onChange={(e) => setCloseComment(e.target.value)}

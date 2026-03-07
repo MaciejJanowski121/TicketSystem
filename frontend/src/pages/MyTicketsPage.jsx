@@ -96,10 +96,10 @@ function MyTicketsPage() {
         navigate('/login');
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to load tickets');
+        setError(errorData.message || 'Fehler beim Laden der Tickets');
       }
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
+      setError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +171,7 @@ function MyTicketsPage() {
             </select>
           </div>
           <div className="tickets-count">
-            {filteredTickets.length} ticket{filteredTickets.length !== 1 ? 's' : ''}
+            {filteredTickets.length} Ticket{filteredTickets.length !== 1 ? 's' : ''}
           </div>
         </div>
 
@@ -181,12 +181,14 @@ function MyTicketsPage() {
             <p>
               {filter === 'ALL' 
                 ? "Sie haben noch keine Tickets erstellt." 
-                : `Sie haben keine Tickets mit dem Status "${filterOptions.find(f => f.value === filter)?.label}".`
+                : `Keine Tickets mit diesem Status vorhanden.`
               }
             </p>
-            <Link to="/tickets/new" className="btn btn-primary">
-              Ihr erstes Ticket erstellen
-            </Link>
+            {filter === 'ALL' && (
+              <Link to="/tickets/new" className="btn btn-primary">
+                Erstes Ticket erstellen
+              </Link>
+            )}
           </div>
         ) : (
           <div className="tickets-grid">
@@ -195,7 +197,7 @@ function MyTicketsPage() {
                 <div className="ticket-header">
                   <h3 className="ticket-title">
                     {ticket.title}
-                    {ticket.unread && <span className="unread-badge">NEW</span>}
+                    {ticket.unread && <span className="unread-badge">NEU</span>}
                   </h3>
                   <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>
                     {stateNames[ticket.ticketState] || ticket.ticketState}

@@ -31,7 +31,7 @@ export const removeToken = () => {
 export const isLoggedIn = () => {
   const token = getToken();
   if (!token) return false;
-  
+
   try {
     const payload = decodeJWT(token);
     // Check if token is expired
@@ -57,7 +57,7 @@ export const decodeJWT = (token) => {
     if (parts.length !== 3) {
       throw new Error('Invalid JWT format');
     }
-    
+
     const payload = parts[1];
     // Add padding if needed
     const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
@@ -74,7 +74,7 @@ export const decodeJWT = (token) => {
 export const getCurrentUser = () => {
   const token = getToken();
   if (!token) return null;
-  
+
   try {
     const payload = decodeJWT(token);
     return {
@@ -102,7 +102,7 @@ export const getUsername = () => {
 export const logout = (navigate) => {
   removeToken();
   if (navigate) {
-    navigate('/');
+    navigate('/login');
   }
 };
 
@@ -112,7 +112,7 @@ export const logout = (navigate) => {
 export const isTokenExpired = () => {
   const token = getToken();
   if (!token) return true;
-  
+
   try {
     const payload = decodeJWT(token);
     if (payload.exp && payload.exp < Date.now() / 1000) {

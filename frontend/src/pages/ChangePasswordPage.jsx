@@ -35,21 +35,21 @@ function ChangePasswordPage() {
 
     // Current password validation
     if (!formData.currentPassword) {
-      newErrors.currentPassword = 'Current password is required';
+      newErrors.currentPassword = 'Aktuelles Passwort ist erforderlich';
     }
 
     // New password validation
     if (!formData.newPassword) {
-      newErrors.newPassword = 'New password is required';
+      newErrors.newPassword = 'Neues Passwort ist erforderlich';
     } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters';
+      newErrors.newPassword = 'Passwort muss mindestens 8 Zeichen lang sein';
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your new password';
+      newErrors.confirmPassword = 'Bitte bestätigen Sie Ihr neues Passwort';
     } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Passwörter stimmen nicht überein';
     }
 
     return newErrors;
@@ -68,7 +68,7 @@ function ChangePasswordPage() {
     const token = getToken();
     if (!token) {
       setIsSuccess(false);
-      setMessage('You must be logged in to change your password.');
+      setMessage('Sie müssen angemeldet sein, um Ihr Passwort zu ändern.');
       navigate('/login');
       return;
     }
@@ -95,7 +95,7 @@ function ChangePasswordPage() {
 
       if (response.ok) {
         setIsSuccess(true);
-        setMessage(data.message || 'Password changed successfully!');
+        setMessage(data.message || 'Passwort erfolgreich geändert!');
         setFormData({
           currentPassword: '',
           newPassword: '',
@@ -108,9 +108,9 @@ function ChangePasswordPage() {
         if (response.status === 400 && data.errors) {
           // Validation errors - set field-specific errors
           setErrors(data.errors);
-          setMessage(data.message || 'Please fix the validation errors below.');
+          setMessage(data.message || 'Bitte beheben Sie die Validierungsfehler unten.');
         } else if (response.status === 401) {
-          setMessage(data.message || 'Invalid current password or authentication failed.');
+          setMessage(data.message || 'Ungültiges aktuelles Passwort oder Authentifizierung fehlgeschlagen.');
           // If token is invalid, redirect to login
           if (data.message && data.message.includes('authentication')) {
             localStorage.removeItem('token');
@@ -118,14 +118,14 @@ function ChangePasswordPage() {
             navigate('/login');
           }
         } else if (response.status === 500) {
-          setMessage(data.message || 'Server error occurred. Please try again later.');
+          setMessage(data.message || 'Serverfehler aufgetreten. Bitte versuchen Sie es später erneut.');
         } else {
-          setMessage(data.message || 'Password change failed. Please try again.');
+          setMessage(data.message || 'Passwort-Änderung fehlgeschlagen. Bitte versuchen Sie es erneut.');
         }
       }
     } catch (error) {
       setIsSuccess(false);
-      setMessage('Network error. Please check your connection and try again.');
+      setMessage('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
@@ -135,14 +135,14 @@ function ChangePasswordPage() {
     <div className="page-centered">
       <div className="container-narrow">
         <div className="card card-narrow">
-          <h1>Change Password</h1>
+          <h1>Passwort ändern</h1>
 
           {message && (
             <div className={`message ${isSuccess ? 'success' : 'error'}`}>
               {message}
               {isSuccess && (
                 <p className="success-note">
-                  Your password has been updated successfully.
+                  Ihr Passwort wurde erfolgreich aktualisiert.
                 </p>
               )}
             </div>
@@ -150,7 +150,7 @@ function ChangePasswordPage() {
 
           <form onSubmit={handleSubmit} className="form">
             <div className="form-group">
-              <label htmlFor="currentPassword">Current Password</label>
+              <label htmlFor="currentPassword">Aktuelles Passwort</label>
               <input
                 type="password"
                 id="currentPassword"
@@ -159,13 +159,13 @@ function ChangePasswordPage() {
                 onChange={handleChange}
                 className={errors.currentPassword ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter your current password"
+                placeholder="Geben Sie Ihr aktuelles Passwort ein"
               />
               {errors.currentPassword && <span className="error-text">{errors.currentPassword}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="newPassword">New Password</label>
+              <label htmlFor="newPassword">Neues Passwort</label>
               <input
                 type="password"
                 id="newPassword"
@@ -174,13 +174,13 @@ function ChangePasswordPage() {
                 onChange={handleChange}
                 className={errors.newPassword ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Enter your new password"
+                placeholder="Geben Sie Ihr neues Passwort ein"
               />
               {errors.newPassword && <span className="error-text">{errors.newPassword}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm New Password</label>
+              <label htmlFor="confirmPassword">Neues Passwort bestätigen</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -189,7 +189,7 @@ function ChangePasswordPage() {
                 onChange={handleChange}
                 className={errors.confirmPassword ? 'error' : ''}
                 disabled={isLoading}
-                placeholder="Confirm your new password"
+                placeholder="Bestätigen Sie Ihr neues Passwort"
               />
               {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
             </div>
@@ -199,7 +199,7 @@ function ChangePasswordPage() {
               className="btn btn-primary btn-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Changing Password...' : 'Change Password'}
+              {isLoading ? 'Passwort wird geändert...' : 'Passwort ändern'}
             </button>
           </form>
         </div>

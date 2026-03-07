@@ -43,9 +43,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Bypass public authentication endpoints
+        // Bypass only public authentication endpoints (login and register)
         String requestPath = request.getRequestURI();
-        if (requestPath.startsWith("/api/auth/")) {
+        if (requestPath.equals("/api/auth/login") || requestPath.equals("/api/auth/register")) {
             filterChain.doFilter(request, response);
             return;
         }

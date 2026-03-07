@@ -48,11 +48,18 @@ public class GlobalExceptionHandler {
      * Handle IllegalArgumentException from various operations.
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        Map<String, Object> response = new HashMap<>();
 
+        // Check if it's from password change validation - let AuthController handle these
+        if (ex.getMessage().equals("Invalid current password") || 
+            ex.getMessage().equals("New password must be different from current password") ||
+            ex.getMessage().equals("Passwords do not match")) {
+            // Re-throw the exception so AuthController can handle it with proper German messages
+            throw ex;
+        }
         // Check if it's from register (user already exists)
-        if (ex.getMessage().contains("already exists")) {
+        else if (ex.getMessage().contains("already exists")) {
             response.put("message", "User already exists");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         } 

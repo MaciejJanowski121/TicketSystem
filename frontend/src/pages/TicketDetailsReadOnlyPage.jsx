@@ -21,35 +21,35 @@ function TicketDetailsReadOnlyPage() {
     if (currentUser && (currentUser.role === 'SUPPORTUSER' || currentUser.role === 'ADMINUSER')) {
       return {
         path: '/support/tickets',
-        text: '← Back to My Tickets'
+        text: '← Zurück zu Meine Tickets'
       };
     }
     return {
       path: '/tickets',
-      text: '← Back to All Tickets'
+      text: '← Zurück zu Alle Tickets'
     };
   };
 
   // Category display names
   const categoryNames = {
-    'ACCOUNT_MANAGEMENT': 'Account Management',
+    'ACCOUNT_MANAGEMENT': 'Konto-Management',
     'HARDWARE': 'Hardware',
-    'PROGRAMS_TOOLS': 'Programs & Tools',
-    'NETWORK': 'Network',
-    'OTHER': 'Other'
+    'PROGRAMS_TOOLS': 'Programme und Tools',
+    'NETWORK': 'Netzwerk',
+    'OTHER': 'Sonstiges'
   };
 
   // State display names
   const stateNames = {
-    'UNASSIGNED': 'Unassigned',
-    'IN_PROGRESS': 'In Progress',
-    'CLOSED': 'Closed'
+    'UNASSIGNED': 'nicht zugeordnet',
+    'IN_PROGRESS': 'in Bearbeitung',
+    'CLOSED': 'abgeschlossen'
   };
 
   useEffect(() => {
     // Check if user is logged in
     if (!isLoggedIn()) {
-      setError('Please login');
+      setError('Bitte melden Sie sich an');
       navigate('/login');
       return;
     }
@@ -69,7 +69,7 @@ function TicketDetailsReadOnlyPage() {
     try {
       const token = getToken();
       if (!token) {
-        setError('Please login');
+        setError('Bitte melden Sie sich an');
         navigate('/login');
         return;
       }
@@ -89,16 +89,16 @@ function TicketDetailsReadOnlyPage() {
         // Token expired or invalid
         localStorage.removeItem('token');
         window.dispatchEvent(new Event('authStateChange'));
-        setError('Please login');
+        setError('Bitte melden Sie sich an');
         navigate('/login');
       } else if (response.status === 404) {
-        setError('Ticket not found');
+        setError('Ticket nicht gefunden');
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to load ticket details');
+        setError(errorData.message || 'Fehler beim Laden der Ticket-Details');
       }
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
+      setError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +132,7 @@ function TicketDetailsReadOnlyPage() {
     e.preventDefault();
 
     if (!commentText.trim()) {
-      setCommentError('Comment cannot be empty.');
+      setCommentError('Kommentar darf nicht leer sein.');
       return;
     }
 
@@ -168,15 +168,15 @@ function TicketDetailsReadOnlyPage() {
         navigate('/login');
       } else if (response.status === 403) {
         const errorData = await response.json();
-        setCommentError(errorData.message || 'Access denied: You cannot comment on this ticket.');
+        setCommentError(errorData.message || 'Zugriff verweigert: Sie können dieses Ticket nicht kommentieren.');
       } else if (response.status === 404) {
-        setCommentError('Ticket not found.');
+        setCommentError('Ticket nicht gefunden.');
       } else {
         const errorData = await response.json();
-        setCommentError(errorData.message || 'Failed to create comment');
+        setCommentError(errorData.message || 'Fehler beim Erstellen des Kommentars');
       }
     } catch (error) {
-      setCommentError('Network error. Please check your connection and try again.');
+      setCommentError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setCommentSubmitting(false);
     }
@@ -213,7 +213,7 @@ function TicketDetailsReadOnlyPage() {
               {getBackLink().text}
             </Link>
           </div>
-          <div className="loading-message">Loading ticket details...</div>
+          <div className="loading-message">Ticket-Details werden geladen...</div>
         </div>
       </div>
     );
@@ -246,7 +246,7 @@ function TicketDetailsReadOnlyPage() {
             </Link>
           </div>
           <div className="message error">
-            Ticket not found
+            Ticket nicht gefunden
           </div>
         </div>
       </div>
@@ -272,7 +272,7 @@ function TicketDetailsReadOnlyPage() {
 
           <div className="ticket-detail-content">
             <div className="ticket-detail-section">
-              <h3>Description</h3>
+              <h3>Beschreibung</h3>
               <div className="ticket-description">
                 {ticket.description}
               </div>
@@ -283,7 +283,7 @@ function TicketDetailsReadOnlyPage() {
               <div className="ticket-detail-meta">
                 <div className="meta-grid">
                   <div className="meta-item">
-                    <strong>Category:</strong>
+                    <strong>Kategorie:</strong>
                     <span>{categoryNames[ticket.ticketCategory] || ticket.ticketCategory}</span>
                   </div>
 
@@ -295,30 +295,30 @@ function TicketDetailsReadOnlyPage() {
                   </div>
 
                   <div className="meta-item">
-                    <strong>Created:</strong>
+                    <strong>Erstellt:</strong>
                     <span>{formatDate(ticket.createDate)}</span>
                   </div>
 
                   <div className="meta-item">
-                    <strong>Updated:</strong>
+                    <strong>Zuletzt geändert:</strong>
                     <span>{formatDate(ticket.updateDate)}</span>
                   </div>
 
                   {ticket.closedDate && (
                     <div className="meta-item">
-                      <strong>Closed:</strong>
+                      <strong>Geschlossen:</strong>
                       <span>{formatDate(ticket.closedDate)}</span>
                     </div>
                   )}
 
                   <div className="meta-item">
-                    <strong>Creator:</strong>
-                    <span>{ticket.creatorUsername || 'Unknown'}</span>
+                    <strong>Ersteller:</strong>
+                    <span>{ticket.creatorUsername || 'Unbekannt'}</span>
                   </div>
 
                   {ticket.assignedSupport && (
                     <div className="meta-item">
-                      <strong>Assigned Support:</strong>
+                      <strong>Zugewiesen an:</strong>
                       <span>{ticket.assignedSupport}</span>
                     </div>
                   )}
@@ -327,7 +327,7 @@ function TicketDetailsReadOnlyPage() {
             </div>
 
             <div className="ticket-detail-section">
-              <h3>Comments</h3>
+              <h3>Kommentare</h3>
               <div className="comments-section">
                 {commentError && (
                   <div className="message error">
@@ -336,7 +336,7 @@ function TicketDetailsReadOnlyPage() {
                 )}
 
                 {!ticket.comments || ticket.comments.length === 0 ? (
-                  <p className="no-comments">No comments yet.</p>
+                  <p className="no-comments">Noch keine Kommentare.</p>
                 ) : (
                   <div className="comments-list">
                     {normalizeComments(ticket.comments, 'ticket')
@@ -365,7 +365,7 @@ function TicketDetailsReadOnlyPage() {
                       <textarea
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Add a comment..."
+                        placeholder="Kommentar hinzufügen..."
                         rows="4"
                         className="comment-textarea"
                         disabled={commentSubmitting}
@@ -376,7 +376,7 @@ function TicketDetailsReadOnlyPage() {
                       className="btn btn-primary"
                       disabled={commentSubmitting || !commentText.trim()}
                     >
-                      {commentSubmitting ? 'Adding Comment...' : 'Add Comment'}
+                      {commentSubmitting ? 'Kommentar wird hinzugefügt...' : 'Kommentar hinzufügen'}
                     </button>
                   </form>
                 )}

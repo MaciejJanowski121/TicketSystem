@@ -115,9 +115,9 @@ function CreateTicketPage() {
           ticketCategory: ''
         });
 
-        // Optionally navigate to home after success
+        // Navigate to the newly created ticket details page
         setTimeout(() => {
-          navigate('/');
+          navigate(`/my-tickets/${data.ticketId}`);
         }, 2000);
       } else {
         setIsSuccess(false);
@@ -163,7 +163,7 @@ function CreateTicketPage() {
               {message}
               {isSuccess && (
                 <p className="success-note">
-                  Ihr Ticket wurde erfolgreich eingereicht. Sie werden zur Startseite weitergeleitet.
+                  Ihr Ticket wurde erfolgreich eingereicht. Sie werden zu den Ticket-Details weitergeleitet.
                 </p>
               )}
             </div>

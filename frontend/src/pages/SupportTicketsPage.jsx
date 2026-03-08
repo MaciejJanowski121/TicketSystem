@@ -537,7 +537,6 @@ function SupportTicketsPage() {
                   <th>Category</th>
                   <th>Assigned Support</th>
                   <th>{sortField === 'createDate' ? 'Created' : 'Updated'}</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -568,82 +567,6 @@ function SupportTicketsPage() {
                     </td>
                     <td className="ticket-updated-cell">
                       {formatDate(sortField === 'createDate' ? ticket.createDate : ticket.updateDate)}
-                    </td>
-                    <td className="ticket-actions-cell">
-                      <div className="action-buttons">
-                        {canAssign(ticket) && (
-                          <button
-                            className="action-btn assign-btn"
-                            onClick={() => handleSupportAction(ticket.ticketId, 'assign')}
-                            disabled={actionLoading[`${ticket.ticketId}-assign`]}
-                          >
-                            {actionLoading[`${ticket.ticketId}-assign`] ? 'Assigning...' : 'Assign to me'}
-                          </button>
-                        )}
-                        {canRelease(ticket) && (
-                          <button
-                            className="action-btn release-btn"
-                            onClick={() => handleSupportAction(ticket.ticketId, 'release')}
-                            disabled={actionLoading[`${ticket.ticketId}-release`]}
-                          >
-                            {actionLoading[`${ticket.ticketId}-release`] ? 'Releasing...' : 'Release'}
-                          </button>
-                        )}
-                        {canClose(ticket) && (
-                          <button
-                            className="action-btn close-btn"
-                            onClick={() => handleCloseTicketClick(ticket)}
-                            disabled={actionLoading[`${ticket.ticketId}-close`]}
-                          >
-                            {actionLoading[`${ticket.ticketId}-close`] ? 'Closing...' : 'Close'}
-                          </button>
-                        )}
-                        {canDelete(ticket) && (
-                          <button
-                            className="action-btn delete-btn"
-                            onClick={() => handleDeleteTicket(ticket.ticketId, ticket.title)}
-                            disabled={actionLoading[`${ticket.ticketId}-delete`]}
-                          >
-                            {actionLoading[`${ticket.ticketId}-delete`] ? 'Deleting...' : 'Delete'}
-                          </button>
-                        )}
-                        {canUpdate(ticket) && (
-                          <select
-                            className="action-select update-status-select"
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                handleUpdateStatus(ticket.ticketId, e.target.value);
-                                e.target.value = '';
-                              }
-                            }}
-                            disabled={actionLoading[`${ticket.ticketId}-update-status`]}
-                          >
-                            <option value="">Update Status</option>
-                            <option value="UNASSIGNED">Unassigned</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="CLOSED">Closed</option>
-                          </select>
-                        )}
-                        {canUpdate(ticket) && (
-                          <select
-                            className="action-select update-category-select"
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                handleUpdateCategory(ticket.ticketId, e.target.value);
-                                e.target.value = '';
-                              }
-                            }}
-                            disabled={actionLoading[`${ticket.ticketId}-update-category`]}
-                          >
-                            <option value="">Update Category</option>
-                            <option value="ACCOUNT_MANAGEMENT">Account Management</option>
-                            <option value="HARDWARE">Hardware</option>
-                            <option value="PROGRAMS_TOOLS">Programs & Tools</option>
-                            <option value="NETWORK">Network</option>
-                            <option value="OTHER">Other</option>
-                          </select>
-                        )}
-                      </div>
                     </td>
                   </tr>
                 ))}

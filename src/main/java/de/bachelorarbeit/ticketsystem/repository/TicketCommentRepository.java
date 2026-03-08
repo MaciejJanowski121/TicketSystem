@@ -25,6 +25,14 @@ public interface TicketCommentRepository extends JpaRepository<TicketComment, Lo
     List<TicketComment> findByTicket(Ticket ticket);
 
     /**
+     * Find all comments for a specific ticket, ordered by comment date ascending (chronological order).
+     *
+     * @param ticket the ticket
+     * @return a list of comments for the specified ticket, ordered chronologically
+     */
+    List<TicketComment> findByTicketOrderByCommentDateAsc(Ticket ticket);
+
+    /**
      * Find all comments by a specific user.
      *
      * @param commentUser the user who made the comments

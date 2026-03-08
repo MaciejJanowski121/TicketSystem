@@ -296,7 +296,7 @@ public class TicketService {
         }
 
         // Fetch comments for the ticket within the transaction
-        List<TicketComment> comments = ticketCommentRepository.findByTicket(ticket);
+        List<TicketComment> comments = ticketCommentRepository.findByTicketOrderByCommentDateAsc(ticket);
 
         // Map comments to TicketCommentResponse DTOs
         List<TicketCommentResponse> commentResponses = comments.stream()
@@ -415,7 +415,7 @@ public class TicketService {
         // No authorization restriction for reading comments - any authenticated user can view comments
         // Only comment creation is restricted by role/ownership in createTicketComment method
 
-        List<TicketComment> comments = ticketCommentRepository.findByTicket(ticket);
+        List<TicketComment> comments = ticketCommentRepository.findByTicketOrderByCommentDateAsc(ticket);
 
         return comments.stream()
                 .map(this::mapToTicketCommentResponse)
@@ -503,7 +503,8 @@ public class TicketService {
         return new TicketCommentResponse(
                 comment.getComment(),
                 comment.getCommentDate(),
-                authorUsername
+                authorUsername,
+                comment.getCommentUser().getRole()
         );
     }
 
@@ -538,6 +539,12 @@ public class TicketService {
      */
     private TicketListItemResponse mapToTicketListItemResponseWithUnread(Ticket ticket, SupportTicketAssignment assignment) {
         boolean unread = ticket.getUpdateDate().isAfter(assignment.getLastViewed());
+
+        // However, if the current support user was the one who made the latest update, don't mark as unread
+        if (unread) {
+            unread = !wasLatestUpdateByUser(ticket, assignment.getSupportUser());
+        }
+
         return new TicketListItemResponse(
                 ticket.getTicketId(),
                 ticket.getTitle(),
@@ -564,6 +571,11 @@ public class TicketService {
         // If no UserTicket record exists, consider it unread
         boolean unread = userTicket == null || ticket.getUpdateDate().isAfter(userTicket.getLastViewed());
 
+        // However, if the current user was the one who made the latest update, don't mark as unread
+        if (unread && userTicket != null) {
+            unread = !wasLatestUpdateByUser(ticket, userTicket.getEndUser());
+        }
+
         TicketResponse response = new TicketResponse(
                 ticket.getTicketId(),
                 ticket.getTitle(),
@@ -576,6 +588,40 @@ public class TicketService {
         );
         response.setUnread(unread);
         return response;
+    }
+
+    /**
+     * Check if the latest update to a ticket was made by the specified user.
+     * This helps determine if a user should see their own updates as "unread".
+     *
+     * @param ticket the ticket to check
+     * @param user the user to check against
+     * @return true if the user made the latest update, false otherwise
+     */
+    private boolean wasLatestUpdateByUser(Ticket ticket, UserAccount user) {
+        // Get the most recent comment for this ticket
+        List<TicketComment> comments = ticketCommentRepository.findByTicketOrderByCommentDateAsc(ticket);
+
+        if (!comments.isEmpty()) {
+            // Get the most recent comment
+            TicketComment latestComment = comments.get(comments.size() - 1);
+
+            // Check if the latest comment was made by the current user and if it's recent enough
+            // to be considered the cause of the ticket's updateDate
+            if (latestComment.getCommentUser().equals(user)) {
+                // If the comment date is very close to the ticket's updateDate, 
+                // then this comment likely caused the update
+                long timeDifference = Math.abs(ticket.getUpdateDate().toEpochMilli() - 
+                                             latestComment.getCommentDate().toEpochMilli());
+                // Allow up to 5 seconds difference to account for processing time
+                return timeDifference <= 5000;
+            }
+        }
+
+        // If no comments exist, we can't determine who made the update from comments alone.
+        // In this case, return false to let the normal unread logic work
+        // (this handles cases like ticket creation, status changes, assignments, etc.)
+        return false;
     }
 
     // ========== SUPPORT WORKFLOW METHODS ==========
@@ -646,8 +692,10 @@ public class TicketService {
             Ticket ticketB = b.getTicket();
 
             // First, sort by unread status (unread first)
-            boolean unreadA = ticketA.getUpdateDate().isAfter(a.getLastViewed());
-            boolean unreadB = ticketB.getUpdateDate().isAfter(b.getLastViewed());
+            boolean unreadA = ticketA.getUpdateDate().isAfter(a.getLastViewed()) && 
+                             !wasLatestUpdateByUser(ticketA, a.getSupportUser());
+            boolean unreadB = ticketB.getUpdateDate().isAfter(b.getLastViewed()) && 
+                             !wasLatestUpdateByUser(ticketB, b.getSupportUser());
 
             if (unreadA != unreadB) {
                 return unreadA ? -1 : 1; // unread tickets first

@@ -13,6 +13,8 @@ function TicketDetailsReadOnlyPage() {
   const [commentText, setCommentText] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [commentError, setCommentError] = useState('');
+  const [closeModal, setCloseModal] = useState({ show: false, ticketId: null, ticketTitle: '' });
+  const [closeComment, setCloseComment] = useState('');
   const navigate = useNavigate();
 
   // Helper function to get back link based on user role
@@ -20,8 +22,8 @@ function TicketDetailsReadOnlyPage() {
     const currentUser = getCurrentUser();
     if (currentUser && (currentUser.role === 'SUPPORTUSER' || currentUser.role === 'ADMINUSER')) {
       return {
-        path: '/support/tickets',
-        text: '← Zurück zu Meine Tickets'
+        path: '/tickets',
+        text: '← Zurück zu Tickets'
       };
     }
     return {
@@ -204,6 +206,181 @@ function TicketDetailsReadOnlyPage() {
     return false;
   };
 
+  // Support action functions
+  const handleSupportAction = async (action, comment = null) => {
+    setActionLoading(prev => ({ ...prev, [action]: true }));
+    setError('');
+
+    try {
+      const token = getToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      let url = `http://localhost:8080/api/support/tickets/${ticketId}`;
+      let method = 'POST';
+      let body = null;
+
+      switch (action) {
+        case 'assign':
+          url += '/assign';
+          break;
+        case 'release':
+          url += '/release';
+          break;
+        case 'close':
+          url += '/close';
+          body = { comment: comment };
+          break;
+        default:
+          return;
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
+        body: body ? JSON.stringify(body) : null
+      });
+
+      if (response.ok) {
+        // Refresh ticket details after successful action
+        fetchTicketDetails();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || `Fehler beim ${action === 'assign' ? 'Zuweisen' : action === 'release' ? 'Aufheben der Zuweisung' : 'Schließen'} des Tickets`);
+      }
+    } catch (error) {
+      setError(`Netzwerkfehler beim Versuch, das Ticket zu ${action === 'assign' ? 'zuweisen' : action === 'release' ? 'entziehen' : 'schließen'}.`);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [action]: false }));
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus) => {
+    setActionLoading(prev => ({ ...prev, 'update-status': true }));
+    setError('');
+
+    try {
+      const token = getToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:8080/api/support/tickets/${ticketId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
+        body: JSON.stringify({ ticketState: newStatus })
+      });
+
+      if (response.ok) {
+        fetchTicketDetails();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Fehler beim Aktualisieren des Ticket-Status');
+      }
+    } catch (error) {
+      setError('Netzwerkfehler beim Aktualisieren des Ticket-Status.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, 'update-status': false }));
+    }
+  };
+
+  const handleUpdateCategory = async (newCategory) => {
+    setActionLoading(prev => ({ ...prev, 'update-category': true }));
+    setError('');
+
+    try {
+      const token = getToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:8080/api/support/tickets/${ticketId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
+        body: JSON.stringify({ ticketCategory: newCategory })
+      });
+
+      if (response.ok) {
+        fetchTicketDetails();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Fehler beim Aktualisieren der Ticket-Kategorie');
+      }
+    } catch (error) {
+      setError('Netzwerkfehler beim Aktualisieren der Ticket-Kategorie.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, 'update-category': false }));
+    }
+  };
+
+  // Permission functions
+  const canAssign = () => {
+    const currentUser = getCurrentUser();
+    return ticket && currentUser && 
+           (currentUser.role === 'SUPPORTUSER' || currentUser.role === 'ADMINUSER') &&
+           ticket.ticketState !== 'CLOSED' && 
+           !ticket.assignedSupport;
+  };
+
+  const canRelease = () => {
+    const currentUser = getCurrentUser();
+    return ticket && currentUser && 
+           ticket.ticketState !== 'CLOSED' && 
+           ticket.assignedSupport && 
+           (ticket.assignedSupport === currentUser.username || currentUser.role === 'ADMINUSER');
+  };
+
+  const canClose = () => {
+    const currentUser = getCurrentUser();
+    return ticket && currentUser && 
+           ticket.ticketState !== 'CLOSED' && 
+           (ticket.assignedSupport === currentUser.username || currentUser.role === 'ADMINUSER');
+  };
+
+  const canUpdate = () => {
+    const currentUser = getCurrentUser();
+    return ticket && currentUser && 
+           (ticket.assignedSupport === currentUser.username || currentUser.role === 'ADMINUSER');
+  };
+
+  const handleCloseTicketClick = () => {
+    setCloseModal({ 
+      show: true, 
+      ticketId: ticketId, 
+      ticketTitle: ticket.title 
+    });
+    setCloseComment('');
+  };
+
+  const handleCloseModalCancel = () => {
+    setCloseModal({ show: false, ticketId: null, ticketTitle: '' });
+    setCloseComment('');
+  };
+
+  const handleCloseModalConfirm = async () => {
+    if (!closeComment.trim()) {
+      setError('Schließungskommentar ist erforderlich');
+      return;
+    }
+
+    setCloseModal({ show: false, ticketId: null, ticketTitle: '' });
+    await handleSupportAction('close', closeComment.trim());
+    setCloseComment('');
+  };
+
   if (isLoading) {
     return (
       <div className="page">
@@ -263,86 +440,149 @@ function TicketDetailsReadOnlyPage() {
         </div>
 
         <div className="ticket-detail-card">
-          <div className="ticket-detail-header-info">
-            <div className="ticket-detail-title-section">
-              <h1 className="ticket-detail-title">{ticket.title}</h1>
-              <div className="ticket-detail-id">#{ticket.ticketId}</div>
-            </div>
+          {/* Header */}
+          <div className="ticket-header">
+            <h1 className="ticket-title">{ticket.title}</h1>
+            <div className="ticket-id">#{ticket.ticketId}</div>
           </div>
 
-          <div className="ticket-detail-content">
-            <div className="ticket-detail-section">
-              <h3>Beschreibung</h3>
-              <div className="ticket-description">
-                {ticket.description}
-              </div>
-            </div>
-
-            <div className="ticket-detail-section">
-              <h3>Details</h3>
-              <div className="ticket-detail-meta">
-                <div className="meta-grid">
-                  <div className="meta-item">
-                    <strong>Kategorie:</strong>
-                    <span>{categoryNames[ticket.ticketCategory] || ticket.ticketCategory}</span>
-                  </div>
-
-                  <div className="meta-item">
-                    <strong>Status:</strong>
-                    <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>
-                      {stateNames[ticket.ticketState] || ticket.ticketState}
-                    </span>
-                  </div>
-
-                  <div className="meta-item">
-                    <strong>Erstellt:</strong>
-                    <span>{formatDate(ticket.createDate)}</span>
-                  </div>
-
-                  <div className="meta-item">
-                    <strong>Zuletzt geändert:</strong>
-                    <span>{formatDate(ticket.updateDate)}</span>
-                  </div>
-
-                  {ticket.closedDate && (
-                    <div className="meta-item">
-                      <strong>Geschlossen:</strong>
-                      <span>{formatDate(ticket.closedDate)}</span>
-                    </div>
+          <div className="ticket-content">
+            {/* Basic Information */}
+            <div className="basic-info">
+              <div className="info-row">
+                <div className="info-item">
+                  <strong>Kategorie</strong>
+                  <span>{categoryNames[ticket.ticketCategory] || ticket.ticketCategory}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Status</strong>
+                  <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>
+                    {stateNames[ticket.ticketState] || ticket.ticketState}
+                  </span>
+                </div>
+                <div className="info-item">
+                  {canAssign() && (
+                    <button
+                      className="assign-button"
+                      onClick={() => handleSupportAction('assign')}
+                      disabled={actionLoading['assign']}
+                    >
+                      {actionLoading['assign'] ? 'Wird zugewiesen...' : 'Ticket übernehmen'}
+                    </button>
                   )}
-
-                  <div className="meta-item">
-                    <strong>Ersteller:</strong>
-                    <span>{ticket.creatorUsername || 'Unbekannt'}</span>
-                  </div>
-
                   {ticket.assignedSupport && (
-                    <div className="meta-item">
-                      <strong>Zugewiesen an:</strong>
+                    <>
+                      <strong>Zugewiesen an</strong>
                       <span>{ticket.assignedSupport}</span>
-                    </div>
+                    </>
                   )}
+                </div>
+              </div>
+              <div className="info-row">
+                <div className="info-item">
+                  <strong>Ersteller</strong>
+                  <span>{ticket.creatorUsername || 'Unbekannt'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Erstellt-Datum</strong>
+                  <span>{formatDate(ticket.createDate)}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Zuletzt geändert</strong>
+                  <span>{formatDate(ticket.updateDate)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="ticket-detail-section">
-              <h3>Kommentare</h3>
-              <div className="comments-section">
-                {commentError && (
-                  <div className="message error">
-                    {commentError}
-                  </div>
-                )}
+            {/* Processing Options - Support/Admin only */}
+            {(getCurrentUser()?.role === 'SUPPORTUSER' || getCurrentUser()?.role === 'ADMINUSER') && (
+              <div className="processing-options">
+                <h3>Bearbeitungs-Optionen</h3>
+                <div className="action-buttons">
+                  {canRelease() && (
+                    <button
+                      className="action-btn release-btn"
+                      onClick={() => handleSupportAction('release')}
+                      disabled={actionLoading['release']}
+                    >
+                      {actionLoading['release'] ? 'Wird aufgehoben...' : 'Zuweisung aufheben'}
+                    </button>
+                  )}
+                  {canClose() && (
+                    <button
+                      className="action-btn close-btn"
+                      onClick={handleCloseTicketClick}
+                      disabled={actionLoading['close']}
+                    >
+                      {actionLoading['close'] ? 'Wird geschlossen...' : 'Ticket schließen'}
+                    </button>
+                  )}
+                  {canUpdate() && (
+                    <>
+                      <select
+                        className="action-select"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleUpdateStatus(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                        disabled={actionLoading['update-status']}
+                      >
+                        <option value="">Status ändern</option>
+                        <option value="UNASSIGNED">Nicht zugeordnet</option>
+                        <option value="IN_PROGRESS">In Bearbeitung</option>
+                        <option value="CLOSED">Abgeschlossen</option>
+                      </select>
+                      <select
+                        className="action-select"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleUpdateCategory(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                        disabled={actionLoading['update-category']}
+                      >
+                        <option value="">Kategorie ändern</option>
+                        <option value="ACCOUNT_MANAGEMENT">Konto-Management</option>
+                        <option value="HARDWARE">Hardware</option>
+                        <option value="PROGRAMS_TOOLS">Programme und Tools</option>
+                        <option value="NETWORK">Netzwerk</option>
+                        <option value="OTHER">Sonstiges</option>
+                      </select>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
-                {!ticket.comments || ticket.comments.length === 0 ? (
-                  <p className="no-comments">Noch keine Kommentare.</p>
-                ) : (
-                  <div className="comments-list">
-                    {normalizeComments(ticket.comments, 'ticket')
-                      .sort((a, b) => new Date(a.commentDate) - new Date(b.commentDate))
-                      .map((comment, index) => (
-                        <div key={index} className="comment-item">
+            {/* Description */}
+            <div className="description-section">
+              <h3>Beschreibung</h3>
+              <div className="description-content">
+                {ticket.description}
+              </div>
+            </div>
+
+            {/* Comments */}
+            <div className="comments-section">
+              <h3>Kommentare</h3>
+              {commentError && (
+                <div className="message error">
+                  {commentError}
+                </div>
+              )}
+
+              {!ticket.comments || ticket.comments.length === 0 ? (
+                <p className="no-comments">Noch keine Kommentare.</p>
+              ) : (
+                <div className="comments-list">
+                  {normalizeComments(ticket.comments, 'ticket')
+                    .map((comment, index) => {
+                      const isSupport = comment.authorRole === 'SUPPORTUSER' || comment.authorRole === 'ADMINUSER';
+                      return (
+                        <div key={index} className={`comment-item ${isSupport ? 'comment-support' : 'comment-user'}`}>
                           <div className="comment-header">
                             <span className="comment-author">
                               {comment.authorUsername}
@@ -355,35 +595,71 @@ function TicketDetailsReadOnlyPage() {
                             {comment.comment}
                           </div>
                         </div>
-                      ))}
-                  </div>
-                )}
+                      );
+                    })}
+                </div>
+              )}
 
-                {canComment() && (
-                  <form onSubmit={createComment} className="comment-form">
-                    <div className="form-group">
-                      <textarea
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Kommentar hinzufügen..."
-                        rows="4"
-                        className="comment-textarea"
-                        disabled={commentSubmitting}
-                      />
-                    </div>
-                    <button 
-                      type="submit" 
-                      className="btn btn-primary"
-                      disabled={commentSubmitting || !commentText.trim()}
-                    >
-                      {commentSubmitting ? 'Kommentar wird hinzugefügt...' : 'Kommentar hinzufügen'}
-                    </button>
-                  </form>
-                )}
-              </div>
+              {canComment() && (
+                <form onSubmit={createComment} className="comment-form">
+                  <div className="form-group">
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Kommentar hinzufügen..."
+                      rows="4"
+                      className="comment-textarea"
+                      disabled={commentSubmitting}
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={commentSubmitting || !commentText.trim()}
+                  >
+                    {commentSubmitting ? 'Kommentar wird hinzugefügt...' : 'Kommentar hinzufügen'}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Close Ticket Modal */}
+        {closeModal.show && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Ticket schließen</h3>
+              <p>Möchten Sie das Ticket "{closeModal.ticketTitle}" wirklich schließen?</p>
+              <div className="form-group">
+                <label htmlFor="closeComment">Schließungskommentar (erforderlich):</label>
+                <textarea
+                  id="closeComment"
+                  value={closeComment}
+                  onChange={(e) => setCloseComment(e.target.value)}
+                  placeholder="Bitte geben Sie einen Kommentar zum Schließen des Tickets ein..."
+                  rows="4"
+                  className="comment-textarea"
+                />
+              </div>
+              <div className="modal-actions">
+                <button 
+                  onClick={handleCloseModalCancel}
+                  className="btn btn-secondary"
+                >
+                  Abbrechen
+                </button>
+                <button 
+                  onClick={handleCloseModalConfirm}
+                  className="btn btn-danger"
+                  disabled={!closeComment.trim()}
+                >
+                  Ticket schließen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,245 +1,30 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { getToken, getAuthHeader, isLoggedIn } from '../utils/auth';
+/*
+ * OBSOLETE PAGE COMPONENT - NO LONGER USED
+ * 
+ * This MyTicketsPage component has been replaced by EndUserTicketsPage.jsx during the UI restructuring.
+ * 
+ * Navigation flow changed from:
+ * - Separate /my-tickets page (this component)
+ * To:
+ * - Unified /tickets page with tabs (EndUserTicketsPage.jsx)
+ * 
+ * EndUsers now access their tickets through:
+ * - /tickets → EndUserTicketsPage with "Meine Tickets" and "Alle Tickets" tabs
+ * 
+ * The /my-tickets route has been removed from the sidebar navigation.
+ * Only /my-tickets/:ticketId route remains active for ticket detail pages.
+ * 
+ * This file can be safely deleted.
+ * MyTicketsPage.css is still used by EndUserTicketsPage.jsx and should NOT be deleted.
+ * 
+ * Kept as placeholder to document the architectural change.
+ */
+
+// Import kept for CSS dependency documentation
 import './MyTicketsPage.css';
 
-function MyTicketsPage() {
-  const [tickets, setTickets] = useState([]);
-  const [filteredTickets, setFilteredTickets] = useState([]);
-  const [filter, setFilter] = useState('ALL');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-
-  // Filter options
-  const filterOptions = [
-    { value: 'ALL', label: 'Alle Tickets' },
-    { value: 'UNASSIGNED', label: 'Nicht zugeordnet' },
-    { value: 'IN_PROGRESS', label: 'In Bearbeitung' },
-    { value: 'CLOSED', label: 'Abgeschlossen' }
-  ];
-
-  // Category display names
-  const categoryNames = {
-    'ACCOUNT_MANAGEMENT': 'Konto-Management',
-    'HARDWARE': 'Hardware',
-    'PROGRAMS_TOOLS': 'Programme und Tools',
-    'NETWORK': 'Netzwerk',
-    'OTHER': 'Sonstiges'
-  };
-
-  // State display names
-  const stateNames = {
-    'UNASSIGNED': 'nicht zugeordnet',
-    'IN_PROGRESS': 'in Bearbeitung',
-    'CLOSED': 'abgeschlossen'
-  };
-
-  useEffect(() => {
-    // Check if user is logged in
-    if (!isLoggedIn()) {
-      navigate('/login');
-      return;
-    }
-
-    fetchTickets();
-  }, [navigate]);
-
-  useEffect(() => {
-    // Apply filter when tickets or filter changes
-    let filtered;
-    if (filter === 'ALL') {
-      filtered = tickets;
-    } else {
-      filtered = tickets.filter(ticket => ticket.ticketState === filter);
-    }
-
-    // Sort tickets: unread first, then by updateDate descending
-    filtered.sort((a, b) => {
-      // First, sort by unread status (unread first)
-      if (a.unread !== b.unread) {
-        return a.unread ? -1 : 1; // unread tickets first
-      }
-      // Then sort by updateDate descending
-      return new Date(b.updateDate) - new Date(a.updateDate);
-    });
-
-    setFilteredTickets(filtered);
-  }, [tickets, filter]);
-
-  const fetchTickets = async () => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const token = getToken();
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await fetch('http://localhost:8080/api/tickets/my', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader()
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTickets(data);
-      } else if (response.status === 401) {
-        // Token expired or invalid
-        localStorage.removeItem('token');
-        window.dispatchEvent(new Event('authStateChange'));
-        navigate('/login');
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Fehler beim Laden der Tickets');
-      }
-    } catch (error) {
-      setError('Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('de-DE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStateClass = (state) => {
-    switch (state) {
-      case 'UNASSIGNED':
-        return 'state-unassigned';
-      case 'IN_PROGRESS':
-        return 'state-in-progress';
-      case 'CLOSED':
-        return 'state-closed';
-      default:
-        return '';
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="page">
-        <div className="tickets-page-container">
-          <h1>Meine Tickets</h1>
-          <div className="loading-message">Tickets werden geladen...</div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="page">
-      <div className="tickets-page-container">
-        <h1>Meine Tickets</h1>
-
-        {error && (
-          <div className="message error">
-            {error}
-          </div>
-        )}
-
-        <div className="tickets-header">
-          <div className="filter-section">
-            <label htmlFor="statusFilter">Nach Status filtern:</label>
-            <select
-              id="statusFilter"
-              value={filter}
-              onChange={handleFilterChange}
-              className="filter-select"
-            >
-              {filterOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="tickets-count">
-            {filteredTickets.length} Ticket{filteredTickets.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-
-        {filteredTickets.length === 0 ? (
-          <div className="empty-state">
-            <h3>Keine Tickets gefunden</h3>
-            <p>
-              {filter === 'ALL' 
-                ? "Sie haben noch keine Tickets erstellt." 
-                : `Keine Tickets mit diesem Status vorhanden.`
-              }
-            </p>
-            {filter === 'ALL' && (
-              <Link to="/tickets/new" className="btn btn-primary">
-                Erstes Ticket erstellen
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="tickets-grid">
-            {filteredTickets.map(ticket => (
-              <div key={ticket.ticketId} className={`ticket-card ${ticket.unread ? 'unread' : ''}`}>
-                <div className="ticket-header">
-                  <h3 className="ticket-title">
-                    {ticket.title}
-                    {ticket.unread && <span className="unread-badge">NEU</span>}
-                  </h3>
-                  <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>
-                    {stateNames[ticket.ticketState] || ticket.ticketState}
-                  </span>
-                </div>
-
-                <div className="ticket-meta">
-                  <div className="ticket-category">
-                    <strong>Kategorie:</strong> {categoryNames[ticket.ticketCategory] || ticket.ticketCategory}
-                  </div>
-                  <div className="ticket-dates">
-                    <div><strong>Erstellt:</strong> {formatDate(ticket.createDate)}</div>
-                    <div><strong>Zuletzt geändert:</strong> {formatDate(ticket.updateDate)}</div>
-                  </div>
-                  {ticket.assignedSupport && (
-                    <div className="ticket-assigned">
-                      <strong>Zugewiesen an:</strong> {ticket.assignedSupport}
-                    </div>
-                  )}
-                </div>
-
-                <div className="ticket-actions">
-                  <Link 
-                    to={`/my-tickets/${ticket.ticketId}`} 
-                    className="btn btn-outline btn-small"
-                    onClick={() => {
-                      // Refresh the ticket list after a short delay to reflect lastViewed update
-                      setTimeout(() => {
-                        fetchTickets();
-                      }, 100);
-                    }}
-                  >
-                    Details anzeigen
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+// Placeholder export to prevent import errors if accidentally imported
+export default function ObsoleteMyTicketsPage() {
+  console.warn('MyTicketsPage component is obsolete. EndUsers should use EndUserTicketsPage (/tickets) instead.');
+  return null;
 }
-
-export default MyTicketsPage;

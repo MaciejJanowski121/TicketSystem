@@ -40,7 +40,7 @@ function MyTicketDetailPage() {
     }
 
     if (!ticketId) {
-      navigate('/my-tickets');
+      navigate('/tickets');
       return;
     }
 
@@ -214,7 +214,7 @@ function MyTicketDetailPage() {
       <div className="page">
         <div className="container">
           <div className="ticket-detail-header">
-            <Link to="/my-tickets" className="back-link">
+            <Link to="/tickets" className="back-link">
               ← Zurück zu Meine Tickets
             </Link>
           </div>
@@ -229,7 +229,7 @@ function MyTicketDetailPage() {
       <div className="page">
         <div className="container">
           <div className="ticket-detail-header">
-            <Link to="/my-tickets" className="back-link">
+            <Link to="/tickets" className="back-link">
               ← Zurück zu Meine Tickets
             </Link>
           </div>
@@ -246,7 +246,7 @@ function MyTicketDetailPage() {
       <div className="page">
         <div className="container">
           <div className="ticket-detail-header">
-            <Link to="/my-tickets" className="back-link">
+            <Link to="/tickets" className="back-link">
               ← Zurück zu Meine Tickets
             </Link>
           </div>
@@ -262,69 +262,69 @@ function MyTicketDetailPage() {
     <div className="page">
       <div className="container">
         <div className="ticket-detail-header">
-          <Link to="/my-tickets" className="back-link">
+          <Link to="/tickets" className="back-link">
             ← Zurück zu Meine Tickets
           </Link>
           <h1>Ticket-Details</h1>
         </div>
 
         <div className="ticket-detail-card">
-          <div className="ticket-detail-header-info">
-            <div className="ticket-detail-title-section">
-              <h2 className="ticket-detail-title">{ticket.title}</h2>
-              <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>
-                {stateNames[ticket.ticketState] || ticket.ticketState}
-              </span>
-            </div>
-            <div className="ticket-detail-id">
-              Ticket ID: #{ticket.ticketId}
-            </div>
+          {/* Header */}
+          <div className="ticket-header">
+            <h1 className="ticket-title">{ticket.title}</h1>
+            <div className="ticket-id">#{ticket.ticketId}</div>
           </div>
 
-          <div className="ticket-detail-content">
-            <div className="ticket-detail-section">
-              <h3>Beschreibung</h3>
-              <div className="ticket-description">
-                {ticket.description}
-              </div>
-            </div>
-
-            <div className="ticket-detail-meta">
-              <div className="meta-grid">
-                <div className="meta-item">
-                  <strong>Kategorie:</strong>
+          <div className="ticket-content">
+            {/* Basic Information */}
+            <div className="basic-info">
+              <div className="info-row">
+                <div className="info-item">
+                  <strong>Kategorie</strong>
                   <span>{categoryNames[ticket.ticketCategory] || ticket.ticketCategory}</span>
                 </div>
-
-                <div className="meta-item">
-                  <strong>Status:</strong>
+                <div className="info-item">
+                  <strong>Status</strong>
                   <span className={`ticket-state ${getStateClass(ticket.ticketState)}`}>
                     {stateNames[ticket.ticketState] || ticket.ticketState}
                   </span>
                 </div>
-
-                <div className="meta-item">
-                  <strong>Erstellt:</strong>
+                <div className="info-item">
+                  {ticket.assignedSupport && (
+                    <>
+                      <strong>Zugewiesen an</strong>
+                      <span>{ticket.assignedSupport}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="info-row">
+                <div className="info-item">
+                  <strong>Ersteller</strong>
+                  <span>{ticket.creatorUsername || 'Sie'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Erstellt-Datum</strong>
                   <span>{formatDate(ticket.createDate)}</span>
                 </div>
-
-                <div className="meta-item">
-                  <strong>Zuletzt aktualisiert:</strong>
+                <div className="info-item">
+                  <strong>Zuletzt geändert</strong>
                   <span>{formatDate(ticket.updateDate)}</span>
                 </div>
-
-                {ticket.assignedSupport && (
-                  <div className="meta-item">
-                    <strong>Zugewiesen an:</strong>
-                    <span>{ticket.assignedSupport}</span>
-                  </div>
-                )}
               </div>
             </div>
 
-            <div className="ticket-detail-section">
-              <h3>Kommentare</h3>
+            {/* Description */}
+            <div className="description-section">
+              <h3>Beschreibung</h3>
+              <div className="description-content">
+                {ticket.description}
+              </div>
+            </div>
 
+            {/* Comments */}
+            <div className="comments-section">
+              <h3>Kommentare</h3>
               {commentError && (
                 <div className="message error">
                   {commentError}
@@ -334,17 +334,15 @@ function MyTicketDetailPage() {
               {commentsLoading ? (
                 <div className="loading-message">Kommentare werden geladen...</div>
               ) : (
-                <div className="comments-section">
+                <>
                   {comments.length === 0 ? (
                     <p className="no-comments">Noch keine Kommentare.</p>
                   ) : (
                     <div className="comments-list">
-                      {normalizeComments(comments, 'comments').map((comment, index) => (
-                        <div key={index} className="comment-item">
-                          <div className="comment-avatar">
-                            {comment.authorUsername ? comment.authorUsername.charAt(0).toUpperCase() : 'U'}
-                          </div>
-                          <div className="comment-content">
+                      {normalizeComments(comments, 'comments').map((comment, index) => {
+                        const isSupport = comment.authorRole === 'SUPPORTUSER' || comment.authorRole === 'ADMINUSER';
+                        return (
+                          <div key={index} className={`comment-item ${isSupport ? 'comment-support' : 'comment-user'}`}>
                             <div className="comment-header">
                               <span className="comment-author">
                                 {comment.authorUsername}
@@ -357,8 +355,8 @@ function MyTicketDetailPage() {
                               {comment.comment}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
@@ -381,7 +379,7 @@ function MyTicketDetailPage() {
                       {commentSubmitting ? 'Kommentar wird hinzugefügt...' : 'Kommentar hinzufügen'}
                     </button>
                   </form>
-                </div>
+                </>
               )}
             </div>
           </div>

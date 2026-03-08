@@ -142,13 +142,13 @@ function Sidebar() {
         {userLoggedIn && userRole === 'ENDUSER' && (
           <>
             <NavLink 
-              to="/my-tickets" 
+              to="/tickets" 
               className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
             >
               <span className="nav-icon">
                 <Ticket size={18} />
               </span>
-              <span className="nav-text">Meine Tickets</span>
+              <span className="nav-text">Tickets</span>
             </NavLink>
             <NavLink 
               to="/tickets/new" 
@@ -163,26 +163,15 @@ function Sidebar() {
         )}
 
         {userLoggedIn && (userRole === 'SUPPORTUSER' || userRole === 'ADMINUSER') && (
-          <>
-            <NavLink 
-              to="/support/tickets" 
-              className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <span className="nav-icon">
-                <Headphones size={18} />
-              </span>
-              <span className="nav-text">Support Tickets</span>
-            </NavLink>
-            <NavLink 
-              to="/tickets" 
-              className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <span className="nav-icon">
-                <List size={18} />
-              </span>
-              <span className="nav-text">Alle Tickets</span>
-            </NavLink>
-          </>
+          <NavLink 
+            to="/tickets" 
+            className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+          >
+            <span className="nav-icon">
+              <Ticket size={18} />
+            </span>
+            <span className="nav-text">Tickets</span>
+          </NavLink>
         )}
 
         {userLoggedIn && userRole === 'ADMINUSER' && (

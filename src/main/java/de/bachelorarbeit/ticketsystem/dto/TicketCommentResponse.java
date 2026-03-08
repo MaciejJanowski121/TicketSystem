@@ -1,5 +1,6 @@
 package de.bachelorarbeit.ticketsystem.dto;
 
+import de.bachelorarbeit.ticketsystem.model.entity.Role;
 import java.time.Instant;
 
 /**
@@ -10,6 +11,7 @@ public class TicketCommentResponse {
     private String comment;
     private Instant commentDate;
     private String authorUsername;
+    private Role authorRole;
 
     // Default constructor
     public TicketCommentResponse() {
@@ -19,6 +21,13 @@ public class TicketCommentResponse {
         this.comment = comment;
         this.commentDate = commentDate;
         this.authorUsername = authorUsername;
+    }
+
+    public TicketCommentResponse(String comment, Instant commentDate, String authorUsername, Role authorRole) {
+        this.comment = comment;
+        this.commentDate = commentDate;
+        this.authorUsername = authorUsername;
+        this.authorRole = authorRole;
     }
 
     // Getters and setters
@@ -44,5 +53,13 @@ public class TicketCommentResponse {
 
     public void setAuthorUsername(String authorUsername) {
         this.authorUsername = authorUsername;
+    }
+
+    public Role getAuthorRole() {
+        return authorRole;
+    }
+
+    public void setAuthorRole(Role authorRole) {
+        this.authorRole = authorRole;
     }
 }

@@ -106,16 +106,6 @@ function Sidebar() {
           <span className="nav-text">Startseite</span>
         </NavLink>
 
-        <NavLink 
-          to="/wiki" 
-          className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-        >
-          <span className="nav-icon">
-            <BookOpen size={18} />
-          </span>
-          <span className="nav-text">Hilfe & Erklärung</span>
-        </NavLink>
-
         {!userLoggedIn && (
           <>
             <NavLink 
@@ -185,6 +175,16 @@ function Sidebar() {
             <span className="nav-text">Benutzerverwaltung</span>
           </NavLink>
         )}
+
+        <NavLink 
+          to="/wiki" 
+          className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+        >
+          <span className="nav-icon">
+            <BookOpen size={18} />
+          </span>
+          <span className="nav-text">Hilfe & Erklärung</span>
+        </NavLink>
       </nav>
 
       {userLoggedIn && (

@@ -110,7 +110,7 @@ public class UnreadFunctionalityTest {
         );
 
         // Assign ticket to support user
-        testTicket.setAssignedSupport(supportUser);
+        testTicket.setAssignedSupportUser(supportUser);
         testTicket.setTicketState(TicketState.IN_PROGRESS);
         testTicket = ticketRepository.save(testTicket);
 

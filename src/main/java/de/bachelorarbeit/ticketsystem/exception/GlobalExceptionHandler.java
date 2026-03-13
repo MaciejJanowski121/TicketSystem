@@ -1,5 +1,6 @@
 package de.bachelorarbeit.ticketsystem.exception;
 
+import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,7 +29,7 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage())
         );
 
-        response.put("message", "Validation failed");
+        response.put("message", "Validierung fehlgeschlagen");
         response.put("errors", errors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -38,65 +39,101 @@ public class GlobalExceptionHandler {
      * Handle authentication failures (login).
      */
     @ExceptionHandler({BadCredentialsException.class})
-    public ResponseEntity<Map<String, String>> handleAuthenticationException(Exception ex) {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Invalid credentials");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse("Ungültige Anmeldedaten"));
     }
 
     /**
      * Handle IllegalArgumentException from various operations.
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        String message = ex.getMessage();
 
         // Check if it's from password change validation - let AuthController handle these
-        if (ex.getMessage().equals("Invalid current password") || 
-            ex.getMessage().equals("New password must be different from current password") ||
-            ex.getMessage().equals("Passwords do not match")) {
+        if (message.equals("Invalid current password") || 
+            message.equals("New password must be different from current password") ||
+            message.equals("Passwords do not match")) {
             // Re-throw the exception so AuthController can handle it with proper German messages
             throw ex;
         }
         // Check if it's from register (user already exists)
-        else if (ex.getMessage().contains("already exists")) {
-            response.put("message", "User already exists");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        else if (message.contains("already exists")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Benutzer existiert bereits"));
         } 
         // Check if it's authentication required (missing authentication)
-        else if (ex.getMessage().contains("Authentication is required")) {
-            response.put("message", "Authentication is required");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        else if (message.contains("Authentication is required")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
-        // Check if it's user not found (from ticket creation or other operations)
-        else if (ex.getMessage().contains("User not found")) {
-            response.put("message", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        } 
-        // Check if it's ticket not found
-        else if (ex.getMessage().contains("Ticket not found")) {
-            response.put("message", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // Check if it's not found (user, ticket, etc.)
+        else if (message.contains("not found")) {
+            String germanMessage = message;
+            if (message.contains("Ticket not found")) {
+                germanMessage = "Ticket nicht gefunden";
+            } else if (message.contains("User not found")) {
+                germanMessage = "Benutzer nicht gefunden";
+            } else if (message.contains("not found")) {
+                germanMessage = "Nicht gefunden";
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse(germanMessage));
         }
         // Check if it's access denied
-        else if (ex.getMessage().contains("Access denied")) {
-            response.put("message", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        else if (message.contains("Access denied")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Zugriff verweigert"));
+        }
+        // Check if it's already assigned or closed (conflict scenarios)
+        else if (message.contains("already assigned") || message.contains("closed")) {
+            String germanMessage = message;
+            if (message.contains("already assigned")) {
+                germanMessage = "Ticket ist bereits zugewiesen";
+            } else if (message.contains("closed")) {
+                germanMessage = "Ticket ist bereits geschlossen";
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse(germanMessage));
+        }
+        // Check if it's assignment required
+        else if (message.contains("Assign ticket first")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Ticket muss zuerst zugewiesen werden"));
+        }
+        // Check if it's closing comment requirement
+        else if (message.contains("Closing a ticket requires a concluding comment")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("Das Schließen eines Tickets erfordert einen abschließenden Kommentar"));
+        }
+        // Check if it's support user access requirement
+        else if (message.contains("Only support users can access")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Nur Support-Benutzer können darauf zugreifen"));
         }
         // For login/auth - user not found should be treated as invalid credentials
         else {
-            response.put("message", "Invalid credentials");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse("Ungültige Anmeldedaten"));
         }
+    }
+
+    /**
+     * Handle SecurityException from access control operations.
+     */
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ErrorResponse> handleSecurityException(SecurityException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse("Zugriff verweigert"));
     }
 
     /**
      * Handle all other exceptions.
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Unexpected error occurred");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Ein Fehler ist bei der Verarbeitung der Anfrage aufgetreten"));
     }
 }

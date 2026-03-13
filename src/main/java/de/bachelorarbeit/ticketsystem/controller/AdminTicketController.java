@@ -1,6 +1,5 @@
 package de.bachelorarbeit.ticketsystem.controller;
 
-import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
 import de.bachelorarbeit.ticketsystem.service.TicketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,22 +35,9 @@ public class AdminTicketController {
      */
     @DeleteMapping("/{ticketId}")
     @PreAuthorize("hasRole('ADMINUSER')")
-    public ResponseEntity<?> deleteTicket(@PathVariable Long ticketId,
+    public ResponseEntity<Void> deleteTicket(@PathVariable Long ticketId,
                                          Authentication authentication) {
-        try {
-            ticketService.deleteTicket(ticketId, authentication);
-            return ResponseEntity.noContent().build(); // 204 No Content
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorResponse("Ticket not found"));
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ErrorResponse(e.getMessage()));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("An error occurred while deleting the ticket"));
-        }
+        ticketService.deleteTicket(ticketId, authentication);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

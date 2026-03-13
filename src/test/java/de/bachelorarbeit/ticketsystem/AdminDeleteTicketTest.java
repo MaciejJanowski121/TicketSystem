@@ -1,7 +1,6 @@
 package de.bachelorarbeit.ticketsystem;
 
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
-import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
 import de.bachelorarbeit.ticketsystem.model.entity.*;
 import de.bachelorarbeit.ticketsystem.repository.*;
 import de.bachelorarbeit.ticketsystem.service.TicketService;
@@ -74,7 +73,7 @@ public class AdminDeleteTicketTest {
         testTicket.setTicketState(TicketState.IN_PROGRESS);
         testTicket.setTicketCategory(TicketCategory.PROGRAMS_TOOLS);
         testTicket.setEndUser(endUser);
-        testTicket.setAssignedSupport(supportUser);
+        testTicket.setAssignedSupportUser(supportUser);
         testTicket.setCreateDate(Instant.now().minusSeconds(3600)); // 1 hour ago
         testTicket.setUpdateDate(Instant.now().minusSeconds(1800)); // 30 minutes ago
         testTicket = ticketRepository.save(testTicket);

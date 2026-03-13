@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setToken } from '../utils/auth';
+import { API_BASE_URL } from '../utils/config';
 import './RegisterPage.css';
 
 function RegisterPage() {
@@ -77,7 +78,7 @@ function RegisterPage() {
     setErrors({});
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

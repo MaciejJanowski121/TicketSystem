@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn } from '../utils/auth';
+import { API_BASE_URL } from '../utils/config';
 import './TicketsOverviewPage.css';
 
 function TicketsOverviewPage() {
@@ -101,7 +102,7 @@ function TicketsOverviewPage() {
       params.append('sort', sortField);
       params.append('direction', sortDirection);
 
-      const url = `http://localhost:8080/api/tickets${params.toString() ? '?' + params.toString() : ''}`;
+      const url = `${API_BASE_URL}/api/tickets${params.toString() ? '?' + params.toString() : ''}`;
 
       const response = await fetch(url, {
         method: 'GET',

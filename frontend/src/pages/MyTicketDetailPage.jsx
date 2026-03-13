@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
 import { normalizeComments } from '../utils/comments';
+import { API_BASE_URL } from '../utils/config';
 import './MyTicketDetailPage.css';
 
 function MyTicketDetailPage() {
@@ -58,7 +59,7 @@ function MyTicketDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/tickets/my/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/tickets/my/${ticketId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ function MyTicketDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/tickets/${ticketId}/comments`, {
+      const response = await fetch(`${API_BASE_URL}/api/tickets/${ticketId}/comments`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +152,7 @@ function MyTicketDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/tickets/${ticketId}/comments`, {
+      const response = await fetch(`${API_BASE_URL}/api/tickets/${ticketId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

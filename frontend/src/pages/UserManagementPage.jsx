@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
+import { API_BASE_URL } from '../utils/config';
 import './UserManagementPage.css';
 
 function UserManagementPage() {
@@ -51,7 +52,7 @@ function UserManagementPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:8080/api/admin/users', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +91,7 @@ function UserManagementPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/admin/users/${encodeURIComponent(userMail)}/role`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${encodeURIComponent(userMail)}/role`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

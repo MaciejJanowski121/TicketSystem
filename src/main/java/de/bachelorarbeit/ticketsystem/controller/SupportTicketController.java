@@ -1,7 +1,6 @@
 package de.bachelorarbeit.ticketsystem.controller;
 
 import de.bachelorarbeit.ticketsystem.dto.CloseTicketRequest;
-import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
 import de.bachelorarbeit.ticketsystem.dto.SupportTicketUpdateRequest;
 import de.bachelorarbeit.ticketsystem.dto.TicketListItemResponse;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
@@ -44,24 +43,16 @@ public class SupportTicketController {
      */
     @GetMapping("/my")
     @PreAuthorize("hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
-    public ResponseEntity<?> getMySupportTickets(
+    public ResponseEntity<List<TicketListItemResponse>> getMySupportTickets(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) TicketState state,
             @RequestParam(required = false) TicketCategory category,
             @RequestParam(required = false, defaultValue = "updateDate") String sort,
             @RequestParam(required = false, defaultValue = "DESC") String direction,
             Authentication authentication) {
-        try {
-            List<TicketListItemResponse> tickets = ticketService.getMySupportTickets(
-                    search, state, category, sort, direction, authentication);
-            return ResponseEntity.ok(tickets);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ErrorResponse(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("An error occurred while retrieving support tickets"));
-        }
+        List<TicketListItemResponse> tickets = ticketService.getMySupportTickets(
+                search, state, category, sort, direction, authentication);
+        return ResponseEntity.ok(tickets);
     }
 
     /**
@@ -73,26 +64,10 @@ public class SupportTicketController {
      */
     @PostMapping("/{ticketId}/assign")
     @PreAuthorize("hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
-    public ResponseEntity<?> assignTicket(@PathVariable Long ticketId,
+    public ResponseEntity<TicketResponse> assignTicket(@PathVariable Long ticketId,
                                          Authentication authentication) {
-        try {
-            TicketResponse ticket = ticketService.assignTicketToCurrentSupport(ticketId, authentication);
-            return ResponseEntity.ok(ticket);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorResponse(e.getMessage()));
-            } else if (e.getMessage().contains("already assigned") || e.getMessage().contains("closed")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(new ErrorResponse(e.getMessage()));
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ErrorResponse(e.getMessage()));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("An error occurred while assigning the ticket"));
-        }
+        TicketResponse ticket = ticketService.assignTicketToCurrentSupport(ticketId, authentication);
+        return ResponseEntity.ok(ticket);
     }
 
     /**
@@ -104,23 +79,10 @@ public class SupportTicketController {
      */
     @PostMapping("/{ticketId}/release")
     @PreAuthorize("hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
-    public ResponseEntity<?> releaseTicket(@PathVariable Long ticketId,
+    public ResponseEntity<TicketResponse> releaseTicket(@PathVariable Long ticketId,
                                           Authentication authentication) {
-        try {
-            TicketResponse ticket = ticketService.releaseTicket(ticketId, authentication);
-            return ResponseEntity.ok(ticket);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorResponse(e.getMessage()));
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ErrorResponse(e.getMessage()));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("An error occurred while releasing the ticket"));
-        }
+        TicketResponse ticket = ticketService.releaseTicket(ticketId, authentication);
+        return ResponseEntity.ok(ticket);
     }
 
     /**
@@ -133,27 +95,11 @@ public class SupportTicketController {
      */
     @PatchMapping("/{ticketId}")
     @PreAuthorize("hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
-    public ResponseEntity<?> updateTicket(@PathVariable Long ticketId,
+    public ResponseEntity<TicketResponse> updateTicket(@PathVariable Long ticketId,
                                          @Valid @RequestBody SupportTicketUpdateRequest request,
                                          Authentication authentication) {
-        try {
-            TicketResponse ticket = ticketService.updateSupportTicket(ticketId, request, authentication);
-            return ResponseEntity.ok(ticket);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorResponse(e.getMessage()));
-            } else if (e.getMessage().contains("Assign ticket first")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(new ErrorResponse(e.getMessage()));
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ErrorResponse(e.getMessage()));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("An error occurred while updating the ticket"));
-        }
+        TicketResponse ticket = ticketService.updateSupportTicket(ticketId, request, authentication);
+        return ResponseEntity.ok(ticket);
     }
 
     /**
@@ -166,26 +112,10 @@ public class SupportTicketController {
      */
     @PostMapping("/{ticketId}/close")
     @PreAuthorize("hasRole('SUPPORTUSER') or hasRole('ADMINUSER')")
-    public ResponseEntity<?> closeTicket(@PathVariable Long ticketId,
+    public ResponseEntity<TicketResponse> closeTicket(@PathVariable Long ticketId,
                                         @Valid @RequestBody CloseTicketRequest request,
                                         Authentication authentication) {
-        try {
-            TicketResponse ticket = ticketService.closeTicketWithComment(ticketId, request.getComment(), authentication);
-            return ResponseEntity.ok(ticket);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorResponse(e.getMessage()));
-            } else if (e.getMessage().contains("Closing a ticket requires a concluding comment")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ErrorResponse(e.getMessage()));
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ErrorResponse(e.getMessage()));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("An error occurred while closing the ticket"));
-        }
+        TicketResponse ticket = ticketService.closeTicketWithComment(ticketId, request.getComment(), authentication);
+        return ResponseEntity.ok(ticket);
     }
 }

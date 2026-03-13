@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getToken, getAuthHeader, getCurrentUser } from '../utils/auth';
+import { API_BASE_URL } from '../utils/config';
 import './CreateTicketPage.css';
 
 function CreateTicketPage() {
@@ -91,7 +92,7 @@ function CreateTicketPage() {
     setErrors({});
 
     try {
-      const response = await fetch('http://localhost:8080/api/tickets', {
+      const response = await fetch(`${API_BASE_URL}/api/tickets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

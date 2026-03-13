@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
 import { normalizeComments } from '../utils/comments';
+import { API_BASE_URL } from '../utils/config';
 import './TicketDetailsReadOnlyPage.css';
 
 function TicketDetailsReadOnlyPage() {
@@ -76,7 +77,7 @@ function TicketDetailsReadOnlyPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/tickets/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/tickets/${ticketId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ function TicketDetailsReadOnlyPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/tickets/${ticketId}/comments`, {
+      const response = await fetch(`${API_BASE_URL}/api/tickets/${ticketId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -218,7 +219,7 @@ function TicketDetailsReadOnlyPage() {
         return;
       }
 
-      let url = `http://localhost:8080/api/support/tickets/${ticketId}`;
+      let url = `${API_BASE_URL}/api/support/tickets/${ticketId}`;
       let method = 'POST';
       let body = null;
 
@@ -271,7 +272,7 @@ function TicketDetailsReadOnlyPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/support/tickets/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/support/tickets/${ticketId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +305,7 @@ function TicketDetailsReadOnlyPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/support/tickets/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/support/tickets/${ticketId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

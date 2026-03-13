@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
+import { API_BASE_URL } from '../utils/config';
 import './MyTicketsPage.css';
 
 function EndUserTicketsPage() {
@@ -129,7 +130,7 @@ function EndUserTicketsPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:8080/api/tickets/my', {
+      const response = await fetch(`${API_BASE_URL}/api/tickets/my`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ function EndUserTicketsPage() {
       params.append('sort', allTicketsSortField);
       params.append('direction', allTicketsSortDirection);
 
-      const url = `http://localhost:8080/api/tickets${params.toString() ? '?' + params.toString() : ''}`;
+      const url = `${API_BASE_URL}/api/tickets${params.toString() ? '?' + params.toString() : ''}`;
 
       const response = await fetch(url, {
         method: 'GET',

@@ -19,7 +19,6 @@ import de.bachelorarbeit.ticketsystem.repository.TicketCommentRepository;
 import de.bachelorarbeit.ticketsystem.repository.TicketRepository;
 import de.bachelorarbeit.ticketsystem.repository.UserRepository;
 import de.bachelorarbeit.ticketsystem.repository.UserTicketRepository;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,7 +100,7 @@ public class TicketService {
                 savedTicket.getTicketCategory(),
                 savedTicket.getCreateDate(),
                 savedTicket.getUpdateDate(),
-                savedTicket.getAssignedSupport() != null ? savedTicket.getAssignedSupport().getUsername() : null
+                savedTicket.getAssignedSupportUser() != null ? savedTicket.getAssignedSupportUser().getUsername() : null
         );
     }
 
@@ -346,7 +345,7 @@ public class TicketService {
                 ticket.getTicketCategory(),
                 ticket.getCreateDate(),
                 ticket.getUpdateDate(),
-                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null
+                ticket.getAssignedSupportUser() != null ? ticket.getAssignedSupportUser().getUsername() : null
         );
     }
 
@@ -365,7 +364,7 @@ public class TicketService {
                 ticket.getTicketCategory(),
                 ticket.getCreateDate(),
                 ticket.getUpdateDate(),
-                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                ticket.getAssignedSupportUser() != null ? ticket.getAssignedSupportUser().getUsername() : null,
                 ticket.getEndUser().getUsername()
         );
     }
@@ -386,7 +385,7 @@ public class TicketService {
                 ticket.getCreateDate(),
                 ticket.getUpdateDate(),
                 ticket.getClosedDate(),
-                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                ticket.getAssignedSupportUser() != null ? ticket.getAssignedSupportUser().getUsername() : null,
                 ticket.getEndUser().getUsername(),
                 ticket.getEndUser().getMail()
         );
@@ -525,7 +524,7 @@ public class TicketService {
                 ticket.getClosedDate(),
                 ticket.getEndUser().getUsername(),
                 ticket.getEndUser().getMail(),
-                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                ticket.getAssignedSupportUser() != null ? ticket.getAssignedSupportUser().getUsername() : null,
                 false // Default unread to false for backward compatibility
         );
     }
@@ -555,7 +554,7 @@ public class TicketService {
                 ticket.getClosedDate(),
                 ticket.getEndUser().getUsername(),
                 ticket.getEndUser().getMail(),
-                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null,
+                ticket.getAssignedSupportUser() != null ? ticket.getAssignedSupportUser().getUsername() : null,
                 unread
         );
     }
@@ -584,7 +583,7 @@ public class TicketService {
                 ticket.getTicketCategory(),
                 ticket.getCreateDate(),
                 ticket.getUpdateDate(),
-                ticket.getAssignedSupport() != null ? ticket.getAssignedSupport().getUsername() : null
+                ticket.getAssignedSupportUser() != null ? ticket.getAssignedSupportUser().getUsername() : null
         );
         response.setUnread(unread);
         return response;
@@ -770,7 +769,7 @@ public class TicketService {
         // - set assignedSupport = currentUser (keep this as cache for DTO compatibility)
         ticket.setTicketState(TicketState.IN_PROGRESS);
         ticket.setUpdateDate(java.time.Instant.now());
-        ticket.setAssignedSupport(currentUser);
+        ticket.setAssignedSupportUser(currentUser);
 
         // Save ticket
         Ticket savedTicket = ticketRepository.save(ticket);
@@ -833,7 +832,7 @@ public class TicketService {
         // - set assignedSupport = null (keep cache consistent)
         ticket.setTicketState(TicketState.UNASSIGNED);
         ticket.setUpdateDate(java.time.Instant.now());
-        ticket.setAssignedSupport(null);
+        ticket.setAssignedSupportUser(null);
 
         // Save ticket
         Ticket savedTicket = ticketRepository.save(ticket);
@@ -888,7 +887,7 @@ public class TicketService {
             } else if (newState == TicketState.UNASSIGNED) {
                 // If state becomes UNASSIGNED: delete assignment and set ticket.assignedSupport = null
                 supportTicketAssignmentRepository.deleteByTicket(ticket);
-                ticket.setAssignedSupport(null);
+                ticket.setAssignedSupportUser(null);
             }
 
             ticket.setTicketState(newState);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
+import { API_BASE_URL } from '../utils/config';
 import './SupportTicketsPage.css';
 
 function SupportTicketsPage() {
@@ -119,7 +120,7 @@ function SupportTicketsPage() {
         ? '/api/tickets' 
         : '/api/support/tickets/my';
 
-      const url = `http://localhost:8080${endpoint}${params.toString() ? '?' + params.toString() : ''}`;
+      const url = `${API_BASE_URL}${endpoint}${params.toString() ? '?' + params.toString() : ''}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -158,7 +159,7 @@ function SupportTicketsPage() {
         return;
       }
 
-      let url = `http://localhost:8080/api/support/tickets/${ticketId}`;
+      let url = `${API_BASE_URL}/api/support/tickets/${ticketId}`;
       let method = 'POST';
       let body = null;
 
@@ -306,7 +307,7 @@ function SupportTicketsPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/support/tickets/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/support/tickets/${ticketId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -339,7 +340,7 @@ function SupportTicketsPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/support/tickets/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/support/tickets/${ticketId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -381,7 +382,7 @@ function SupportTicketsPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/admin/tickets/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/tickets/${ticketId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

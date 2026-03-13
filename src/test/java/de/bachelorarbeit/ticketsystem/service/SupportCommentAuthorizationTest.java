@@ -78,7 +78,7 @@ public class SupportCommentAuthorizationTest {
         // Assign ticket to support user
         SupportTicketAssignment assignment = new SupportTicketAssignment(testTicket, supportUser);
         supportTicketAssignmentRepository.save(assignment);
-        testTicket.setAssignedSupport(supportUser);
+        testTicket.setAssignedSupportUser(supportUser);
         ticketRepository.save(testTicket);
 
         // Create authentication for support user
@@ -128,7 +128,7 @@ public class SupportCommentAuthorizationTest {
         // Assign ticket to other support user
         SupportTicketAssignment assignment = new SupportTicketAssignment(testTicket, otherSupportUser);
         supportTicketAssignmentRepository.save(assignment);
-        testTicket.setAssignedSupport(otherSupportUser);
+        testTicket.setAssignedSupportUser(otherSupportUser);
         ticketRepository.save(testTicket);
 
         // Create authentication for first support user (ticket is assigned to other support user)
@@ -156,7 +156,7 @@ public class SupportCommentAuthorizationTest {
         // Assign ticket to support user (admin should still be able to comment)
         SupportTicketAssignment assignment = new SupportTicketAssignment(testTicket, supportUser);
         supportTicketAssignmentRepository.save(assignment);
-        testTicket.setAssignedSupport(supportUser);
+        testTicket.setAssignedSupportUser(supportUser);
         ticketRepository.save(testTicket);
 
         // Create authentication for admin user

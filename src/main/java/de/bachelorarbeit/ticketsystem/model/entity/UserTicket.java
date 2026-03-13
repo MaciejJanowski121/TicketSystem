@@ -9,9 +9,9 @@ import java.time.Instant;
  */
 @Entity
 @Table(
-    name = "user_tickets",
+    name = "user_ticket",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"ticket_id", "enduser_mail"})
+        @UniqueConstraint(columnNames = {"ticket_id", "end_user_mail"})
     }
 )
 public class UserTicket {
@@ -25,7 +25,7 @@ public class UserTicket {
     private Ticket ticket;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enduser_mail", referencedColumnName = "mail", nullable = false)
+    @JoinColumn(name = "end_user_mail", referencedColumnName = "mail", nullable = false)
     private UserAccount endUser;
 
     @Column(nullable = false)

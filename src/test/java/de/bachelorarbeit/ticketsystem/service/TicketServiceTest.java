@@ -2,11 +2,9 @@ package de.bachelorarbeit.ticketsystem.service;
 
 import de.bachelorarbeit.ticketsystem.dto.CreateTicketRequest;
 import de.bachelorarbeit.ticketsystem.dto.TicketResponse;
-import de.bachelorarbeit.ticketsystem.model.entity.Role;
 import de.bachelorarbeit.ticketsystem.model.entity.Ticket;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketCategory;
 import de.bachelorarbeit.ticketsystem.model.entity.TicketState;
-import de.bachelorarbeit.ticketsystem.model.entity.UserAccount;
 import de.bachelorarbeit.ticketsystem.repository.TicketRepository;
 import de.bachelorarbeit.ticketsystem.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -210,7 +208,7 @@ public class TicketServiceTest {
         Ticket savedTicket = ticketRepository.findById(response.getTicketId()).orElse(null);
         assertNotNull(savedTicket);
         assertEquals(TicketState.UNASSIGNED, savedTicket.getTicketState());
-        assertNull(savedTicket.getAssignedSupport());
+        assertNull(savedTicket.getAssignedSupportUser());
         assertNull(savedTicket.getClosedDate());
         assertNotNull(savedTicket.getCreateDate());
         assertNotNull(savedTicket.getUpdateDate());

@@ -1,6 +1,5 @@
 package de.bachelorarbeit.ticketsystem.controller;
 
-import de.bachelorarbeit.ticketsystem.dto.ErrorResponse;
 import de.bachelorarbeit.ticketsystem.dto.UpdateUserRoleRequest;
 import de.bachelorarbeit.ticketsystem.dto.UserResponse;
 import de.bachelorarbeit.ticketsystem.service.UserService;
@@ -51,20 +50,10 @@ public class AdminUserController {
      */
     @PatchMapping("/{mail}/role")
     @PreAuthorize("hasRole('ADMINUSER')")
-    public ResponseEntity<?> updateUserRole(@PathVariable String mail,
+    public ResponseEntity<UserResponse> updateUserRole(@PathVariable String mail,
                                            @Valid @RequestBody UpdateUserRoleRequest request,
                                            Authentication authentication) {
-        try {
-            UserResponse updatedUser = userService.updateUserRole(mail, request.getRole());
-            return ResponseEntity.ok(updatedUser);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorResponse("User not found"));
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ErrorResponse(e.getMessage()));
-            }
-        }
+        UserResponse updatedUser = userService.updateUserRole(mail, request.getRole());
+        return ResponseEntity.ok(updatedUser);
     }
 }

@@ -5,7 +5,6 @@ import de.bachelorarbeit.ticketsystem.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -83,7 +82,7 @@ public class AdminTicketControllerTest {
         testTicket.setTicketState(TicketState.IN_PROGRESS);
         testTicket.setTicketCategory(TicketCategory.PROGRAMS_TOOLS);
         testTicket.setEndUser(endUser);
-        testTicket.setAssignedSupport(supportUser);
+        testTicket.setAssignedSupportUser(supportUser);
         testTicket.setCreateDate(Instant.now().minusSeconds(3600));
         testTicket.setUpdateDate(Instant.now().minusSeconds(1800));
         testTicket = ticketRepository.save(testTicket);

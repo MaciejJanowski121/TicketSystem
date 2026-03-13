@@ -11,7 +11,7 @@ import java.time.Instant;
 @Table(
     name = "ticket_comment",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"ticket_id", "comment_email", "comment_date"})
+        @UniqueConstraint(columnNames = {"ticket_id", "comment_user_mail", "comment_date"})
     }
 )
 public class TicketComment {
@@ -25,7 +25,7 @@ public class TicketComment {
     private Ticket ticket;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_email", referencedColumnName = "mail", nullable = false)
+    @JoinColumn(name = "comment_user_mail", referencedColumnName = "mail", nullable = false)
     private UserAccount commentUser;
 
     @Column(name = "comment_date", nullable = false)

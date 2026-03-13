@@ -20,6 +20,7 @@ public class Ticket {
     @Column(nullable = false)
     private Instant updateDate;
 
+@Column()
     private Instant closedDate;
 
     @Column(nullable = false)
@@ -38,12 +39,12 @@ public class Ticket {
     private TicketCategory ticketCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enduser_email", referencedColumnName = "mail", nullable = false)
+    @JoinColumn(name = "end_user_mail", referencedColumnName = "mail", nullable = false)
     private UserAccount endUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "support_email", referencedColumnName = "mail")
-    private UserAccount assignedSupport;
+    @JoinColumn(name = "assigned_support_user_mail", referencedColumnName = "mail")
+    private UserAccount assignedSupportUser;
 
     // Default constructor required by JPA
     public Ticket() {
@@ -133,12 +134,12 @@ public class Ticket {
         this.endUser = endUser;
     }
 
-    public UserAccount getAssignedSupport() {
-        return assignedSupport;
+    public UserAccount getAssignedSupportUser() {
+        return assignedSupportUser;
     }
 
-    public void setAssignedSupport(UserAccount assignedSupport) {
-        this.assignedSupport = assignedSupport;
+    public void setAssignedSupportUser(UserAccount assignedSupportUser) {
+        this.assignedSupportUser = assignedSupportUser;
     }
 
     @PreUpdate

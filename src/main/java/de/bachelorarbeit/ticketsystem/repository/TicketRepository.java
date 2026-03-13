@@ -31,10 +31,10 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     /**
      * Find all tickets assigned to a specific support user.
      *
-     * @param assignedSupport the support user
+     * @param assignedSupportUser the support user
      * @return a list of tickets assigned to the support user
      */
-    List<Ticket> findByAssignedSupport(UserAccount assignedSupport);
+    List<Ticket> findByAssignedSupportUser(UserAccount assignedSupportUser);
 
     /**
      * Find all tickets created by a specific end user with pagination.
@@ -52,14 +52,14 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * @param pageable pagination information
      * @return a page of tickets assigned to the support user
      */
-    Page<Ticket> findByAssignedSupport(UserAccount assignedSupport, Pageable pageable);
+    Page<Ticket> findByAssignedSupportUser(UserAccount assignedSupport, Pageable pageable);
 
     /**
      * Find all unassigned tickets (tickets with no assigned support user).
      *
      * @return a list of unassigned tickets
      */
-    List<Ticket> findByAssignedSupportIsNull();
+    List<Ticket> findByAssignedSupportUserIsNull();
 
     /**
      * Find all unassigned tickets with pagination.
@@ -67,7 +67,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * @param pageable pagination information
      * @return a page of unassigned tickets
      */
-    Page<Ticket> findByAssignedSupportIsNull(Pageable pageable);
+    Page<Ticket> findByAssignedSupportUserIsNull(Pageable pageable);
 
     /**
      * Find all tickets created by a specific end user, sorted by updateDate descending.
@@ -171,7 +171,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      */
     @Query("SELECT t FROM Ticket t " +
            "LEFT JOIN t.endUser eu " +
-           "LEFT JOIN t.assignedSupport sup " +
+           "LEFT JOIN t.assignedSupportUser sup " +
            "WHERE (:search IS NULL OR " +
            "       t.title LIKE '%' || :search || '%' OR " +
            "       eu.username LIKE '%' || :search || '%' OR " +
@@ -193,7 +193,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      */
     @Query("SELECT t FROM Ticket t " +
            "LEFT JOIN t.endUser eu " +
-           "LEFT JOIN t.assignedSupport sup " +
+           "LEFT JOIN t.assignedSupportUser sup " +
            "WHERE (:search IS NULL OR " +
            "       t.title LIKE '%' || :search || '%' OR " +
            "       eu.username LIKE '%' || :search || '%' OR " +
@@ -215,7 +215,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      */
     @Query("SELECT t FROM Ticket t " +
            "LEFT JOIN t.endUser eu " +
-           "LEFT JOIN t.assignedSupport sup " +
+           "LEFT JOIN t.assignedSupportUser sup " +
            "WHERE (:search IS NULL OR " +
            "       t.title LIKE '%' || :search || '%' OR " +
            "       eu.username LIKE '%' || :search || '%' OR " +
@@ -237,7 +237,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      */
     @Query("SELECT t FROM Ticket t " +
            "LEFT JOIN t.endUser eu " +
-           "LEFT JOIN t.assignedSupport sup " +
+           "LEFT JOIN t.assignedSupportUser sup " +
            "WHERE (:search IS NULL OR " +
            "       t.title LIKE '%' || :search || '%' OR " +
            "       eu.username LIKE '%' || :search || '%' OR " +

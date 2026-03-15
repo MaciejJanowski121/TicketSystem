@@ -106,7 +106,7 @@ public class SupportWorkflowTest {
     }
 
     @Test
-    void testSupportUserCannotTakeOverAssignedTicket() {
+    void testSupportUserCanTakeOverAssignedTicket() {
         Authentication supportAuth = new UsernamePasswordAuthenticationToken(
                 supportUser.getMail(),
                 null,
@@ -122,13 +122,14 @@ public class SupportWorkflowTest {
         // First support user assigns ticket
         ticketService.assignTicketToCurrentSupport(testTicket.getTicketId(), supportAuth);
 
-        // Second support user tries to take over - should fail
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ticketService.assignTicketToCurrentSupport(testTicket.getTicketId(), otherSupportAuth);
-        });
-        assertEquals("Ticket already assigned", exception.getMessage());
+        // Second support user takes over - should succeed
+        TicketResponse response = ticketService.assignTicketToCurrentSupport(testTicket.getTicketId(), otherSupportAuth);
 
-        System.out.println("[DEBUG_LOG] Support user correctly prevented from taking over assigned ticket");
+        assertNotNull(response);
+        assertEquals(otherSupportUser.getUsername(), response.getAssignedSupport());
+        assertEquals(TicketState.IN_PROGRESS, response.getTicketState());
+
+        System.out.println("[DEBUG_LOG] Support user successfully took over assigned ticket");
     }
 
     @Test
@@ -158,7 +159,7 @@ public class SupportWorkflowTest {
     }
 
     @Test
-    void testCannotAssignClosedTicket() {
+    void testCanAssignClosedTicketToReopenIt() {
         Authentication supportAuth = new UsernamePasswordAuthenticationToken(
                 supportUser.getMail(),
                 null,
@@ -170,13 +171,14 @@ public class SupportWorkflowTest {
         testTicket.setClosedDate(java.time.Instant.now());
         ticketRepository.save(testTicket);
 
-        // Try to assign closed ticket - should fail
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ticketService.assignTicketToCurrentSupport(testTicket.getTicketId(), supportAuth);
-        });
-        assertEquals("Ticket is closed", exception.getMessage());
+        // Assign closed ticket - should succeed and reopen it
+        TicketResponse response = ticketService.assignTicketToCurrentSupport(testTicket.getTicketId(), supportAuth);
 
-        System.out.println("[DEBUG_LOG] Correctly prevented assignment of closed ticket");
+        assertNotNull(response);
+        assertEquals(TicketState.IN_PROGRESS, response.getTicketState());
+        assertEquals(supportUser.getUsername(), response.getAssignedSupport());
+
+        System.out.println("[DEBUG_LOG] Successfully assigned closed ticket and reopened it");
     }
 
     @Test

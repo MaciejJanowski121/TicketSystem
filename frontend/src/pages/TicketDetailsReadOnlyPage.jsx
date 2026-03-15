@@ -194,13 +194,8 @@ function TicketDetailsReadOnlyPage() {
       return true;
     }
 
-    // SUPPORTUSER can comment on tickets assigned to them
-    if (currentUser.role === 'SUPPORTUSER' && ticket.assignedSupport === currentUser.username) {
-      return true;
-    }
-
-    // ADMINUSER can comment on any ticket
-    if (currentUser.role === 'ADMINUSER') {
+    // SUPPORTUSER and ADMINUSER can ALWAYS comment on any ticket
+    if (currentUser.role === 'SUPPORTUSER' || currentUser.role === 'ADMINUSER') {
       return true;
     }
 
@@ -382,6 +377,48 @@ function TicketDetailsReadOnlyPage() {
     setCloseComment('');
   };
 
+  const handleDeleteTicket = async () => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+        `Möchten Sie das Ticket "${ticket.title}" wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden und entfernt das Ticket sowie alle zugehörigen Kommentare dauerhaft.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActionLoading(prev => ({ ...prev, 'delete': true }));
+    setError('');
+
+    try {
+      const token = getToken();
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/tickets/${ticketId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        }
+      });
+
+      if (response.ok) {
+        // Navigate back to tickets page after successful deletion
+        navigate('/tickets');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Fehler beim Löschen des Tickets');
+      }
+    } catch (error) {
+      setError('Netzwerkfehler beim Löschen des Tickets.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, 'delete': false }));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="page">
@@ -453,7 +490,22 @@ function TicketDetailsReadOnlyPage() {
               <div className="info-row">
                 <div className="info-item">
                   <strong>Kategorie</strong>
-                  <span>{categoryNames[ticket.ticketCategory] || ticket.ticketCategory}</span>
+                  {(getCurrentUser()?.role === 'SUPPORTUSER' || getCurrentUser()?.role === 'ADMINUSER') ? (
+                    <select
+                      className="category-select"
+                      value={ticket.ticketCategory}
+                      onChange={(e) => handleUpdateCategory(e.target.value)}
+                      disabled={actionLoading['update-category']}
+                    >
+                      <option value="ACCOUNT_MANAGEMENT">Konto-Management</option>
+                      <option value="HARDWARE">Hardware</option>
+                      <option value="PROGRAMS_TOOLS">Programme und Tools</option>
+                      <option value="NETWORK">Netzwerk</option>
+                      <option value="OTHER">Sonstiges</option>
+                    </select>
+                  ) : (
+                    <span>{categoryNames[ticket.ticketCategory] || ticket.ticketCategory}</span>
+                  )}
                 </div>
                 <div className="info-item">
                   <strong>Status</strong>
@@ -462,19 +514,15 @@ function TicketDetailsReadOnlyPage() {
                   </span>
                 </div>
                 <div className="info-item">
-                  {canAssign() && (
-                    <button
-                      className="assign-button"
-                      onClick={() => handleSupportAction('assign')}
-                      disabled={actionLoading['assign']}
-                    >
-                      {actionLoading['assign'] ? 'Wird zugewiesen...' : 'Ticket übernehmen'}
-                    </button>
-                  )}
-                  {ticket.assignedSupport && (
+                  {ticket.assignedSupport ? (
                     <>
                       <strong>Zugewiesen an</strong>
                       <span>{ticket.assignedSupport}</span>
+                    </>
+                  ) : (
+                    <>
+                      <strong>Zugewiesen an</strong>
+                      <span>Nicht zugewiesen</span>
                     </>
                   )}
                 </div>
@@ -500,59 +548,49 @@ function TicketDetailsReadOnlyPage() {
               <div className="processing-options">
                 <h3>Bearbeitungs-Optionen</h3>
                 <div className="action-buttons">
-                  {canRelease() && (
+                  {/* Case A: Status = "nicht zugeordnet" oder "abgeschlossen" - Show "Ticket übernehmen" */}
+                  {(ticket.ticketState === 'UNASSIGNED' || ticket.ticketState === 'CLOSED') && (
                     <button
-                      className="action-btn release-btn"
-                      onClick={() => handleSupportAction('release')}
-                      disabled={actionLoading['release']}
+                      className="action-btn assign-btn"
+                      onClick={() => handleSupportAction('assign')}
+                      disabled={actionLoading['assign']}
                     >
-                      {actionLoading['release'] ? 'Wird aufgehoben...' : 'Zuweisung aufheben'}
+                      {actionLoading['assign'] ? 'Wird zugewiesen...' : 'Ticket übernehmen'}
                     </button>
                   )}
-                  {canClose() && (
-                    <button
-                      className="action-btn close-btn"
-                      onClick={handleCloseTicketClick}
-                      disabled={actionLoading['close']}
-                    >
-                      {actionLoading['close'] ? 'Wird geschlossen...' : 'Ticket schließen'}
-                    </button>
-                  )}
-                  {canUpdate() && (
+
+                  {/* Case B: Status = "zugeordnet" - Show "Zuweisung aufheben" and "Ticket schließen" */}
+                  {ticket.ticketState === 'IN_PROGRESS' && (
+                    getCurrentUser()?.role === 'ADMINUSER' || 
+                    (getCurrentUser()?.role === 'SUPPORTUSER' && ticket.assignedSupport === getCurrentUser()?.username)
+                  ) && (
                     <>
-                      <select
-                        className="action-select"
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleUpdateStatus(e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                        disabled={actionLoading['update-status']}
+                      <button
+                        className="action-btn release-btn"
+                        onClick={() => handleSupportAction('release')}
+                        disabled={actionLoading['release']}
                       >
-                        <option value="">Status ändern</option>
-                        <option value="UNASSIGNED">Nicht zugeordnet</option>
-                        <option value="IN_PROGRESS">In Bearbeitung</option>
-                        <option value="CLOSED">Abgeschlossen</option>
-                      </select>
-                      <select
-                        className="action-select"
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleUpdateCategory(e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                        disabled={actionLoading['update-category']}
+                        {actionLoading['release'] ? 'Wird aufgehoben...' : 'Zuweisung aufheben'}
+                      </button>
+                      <button
+                        className="action-btn close-btn"
+                        onClick={handleCloseTicketClick}
+                        disabled={actionLoading['close']}
                       >
-                        <option value="">Kategorie ändern</option>
-                        <option value="ACCOUNT_MANAGEMENT">Konto-Management</option>
-                        <option value="HARDWARE">Hardware</option>
-                        <option value="PROGRAMS_TOOLS">Programme und Tools</option>
-                        <option value="NETWORK">Netzwerk</option>
-                        <option value="OTHER">Sonstiges</option>
-                      </select>
+                        {actionLoading['close'] ? 'Wird geschlossen...' : 'Ticket schließen'}
+                      </button>
                     </>
+                  )}
+
+                  {/* Case C: Admin is logged in - Always show "Ticket löschen" */}
+                  {getCurrentUser()?.role === 'ADMINUSER' && (
+                    <button
+                      className="action-btn delete-btn"
+                      onClick={() => handleDeleteTicket()}
+                      disabled={actionLoading['delete']}
+                    >
+                      {actionLoading['delete'] ? 'Wird gelöscht...' : 'Ticket löschen'}
+                    </button>
                   )}
                 </div>
               </div>

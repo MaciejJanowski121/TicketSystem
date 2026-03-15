@@ -740,21 +740,29 @@ public class TicketService {
 
         Ticket ticket = ticketOpt.get();
 
-        // If ticket state is CLOSED -> return conflict
-        if (ticket.getTicketState() == TicketState.CLOSED) {
-            throw new IllegalArgumentException("Ticket is closed");
-        }
+        // Note: CLOSED tickets can be reopened by assigning them
+        // No restriction on CLOSED tickets - they will be reopened to IN_PROGRESS
 
-        // Check if assignment already exists
-        if (supportTicketAssignmentRepository.existsByTicket(ticket)) {
-            // If SUPPORTUSER and assignment exists -> conflict "Ticket already assigned"
-            if (currentUser.getRole() == Role.SUPPORTUSER) {
-                throw new IllegalArgumentException("Ticket already assigned");
+        // Check if assignment already exists and handle it properly
+        Optional<SupportTicketAssignment> existingAssignmentOpt = supportTicketAssignmentRepository.findByTicket(ticket);
+        if (existingAssignmentOpt.isPresent()) {
+            SupportTicketAssignment existingAssignment = existingAssignmentOpt.get();
+
+            // If the ticket is already assigned to the current user, no need to do anything
+            if (existingAssignment.getSupportUser().getMail().equals(currentUser.getMail())) {
+                // Just update the ticket state if it's CLOSED (reopen it)
+                if (ticket.getTicketState() == TicketState.CLOSED) {
+                    ticket.setTicketState(TicketState.IN_PROGRESS);
+                    ticket.setUpdateDate(java.time.Instant.now());
+                    Ticket savedTicket = ticketRepository.save(ticket);
+                    return mapToTicketResponseWithAllDetails(savedTicket);
+                }
+                // If already assigned to current user and not closed, return current state
+                return mapToTicketResponseWithAllDetails(ticket);
             }
-            // If ADMINUSER and assignment exists -> delete existing assignment (takeover)
-            if (currentUser.getRole() == Role.ADMINUSER) {
-                supportTicketAssignmentRepository.deleteByTicket(ticket);
-            }
+
+            // If assigned to different user, delete existing assignment (takeover for both SUPPORT and ADMIN)
+            supportTicketAssignmentRepository.deleteByTicket(ticket);
         }
 
         // Create new SupportTicketAssignment(ticket, currentUser)

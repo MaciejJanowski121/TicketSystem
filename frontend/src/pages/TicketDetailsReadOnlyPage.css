@@ -90,6 +90,44 @@
   font-weight: 500;
 }
 
+/* Category dropdown styling */
+.category-select {
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 500;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  min-width: 200px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.category-select:hover:not(:disabled) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.category-select:focus:not(:disabled) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.category-select:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
 /* Assign button in basic info */
 .assign-button {
   padding: 0.5rem 1rem;
@@ -180,29 +218,21 @@
 
 /* Ticket state styles */
 .ticket-state {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 1rem;
+  color: #1f2937;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  display: inline-block;
 }
 
 .state-unassigned {
-  background-color: #fef3c7;
-  color: #92400e;
+  /* No special styling - looks like normal text */
 }
 
 .state-in-progress {
-  background-color: #dbeafe;
-  color: #1e40af;
+  /* No special styling - looks like normal text */
 }
 
 .state-closed {
-  background-color: #dcfce7;
-  color: #166534;
+  /* No special styling - looks like normal text */
 }
 
 /* Loading message */

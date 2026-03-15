@@ -365,7 +365,7 @@ function SupportTicketsPage() {
   const handleDeleteTicket = async (ticketId, ticketTitle) => {
     // Show confirmation dialog
     const confirmed = window.confirm(
-      `Are you sure you want to delete the ticket "${ticketTitle}"?\n\nThis action cannot be undone and will permanently remove the ticket and all its comments.`
+        `Möchten Sie das Ticket "${ticketTitle}" wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden und entfernt das Ticket sowie alle zugehörigen Kommentare dauerhaft.`
     );
 
     if (!confirmed) {

@@ -27,9 +27,10 @@ function TicketDetailsReadOnlyPage() {
         text: '← Zurück zu Tickets'
       };
     }
+    // For ENDUSER, go back to tickets page (which shows EndUserTicketsPage)
     return {
       path: '/tickets',
-      text: '← Zurück zu Alle Tickets'
+      text: '← Zurück zu Meine Tickets'
     };
   };
 

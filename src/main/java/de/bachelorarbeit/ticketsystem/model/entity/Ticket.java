@@ -17,7 +17,7 @@ public class Ticket {
     @Column(nullable = false)
     private Instant createDate;
 
-    @Column(nullable = false)
+    @Column()
     private Instant updateDate;
 
 @Column()

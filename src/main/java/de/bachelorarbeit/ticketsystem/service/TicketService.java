@@ -61,18 +61,8 @@ public class TicketService {
      */
     @Transactional
     public TicketResponse createTicket(CreateTicketRequest request, Authentication authentication) {
-        // Determine current user identity from authentication.getName()
-        String userIdentifier = authentication.getName();
-
-        // Load UserAccount based on whether name contains '@' (email) or not (username)
-        UserAccount endUser;
-        if (userIdentifier.contains("@")) {
-            endUser = userRepository.findByMail(userIdentifier)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        } else {
-            endUser = userRepository.findByUsername(userIdentifier)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        }
+        // Use the existing getCurrentUser method instead of duplicating logic
+        UserAccount endUser = getCurrentUser(authentication);
 
         // Create Ticket using existing constructor
         Ticket ticket = new Ticket(
@@ -266,7 +256,8 @@ public class TicketService {
 
     /**
      * Get a specific ticket by ID for any authenticated user.
-     * Updates lastViewed timestamp for SUPPORT/ADMIN users if they are assigned to the ticket.
+     * Updates lastViewed timestamp for SUPPORT/ADMIN users if they are assigned to the ticket,
+     * and for ENDUSER if they own the ticket.
      *
      * @param ticketId the ID of the ticket to retrieve
      * @param authentication the authentication object containing current user info
@@ -289,9 +280,23 @@ public class TicketService {
             Optional<SupportTicketAssignment> assignmentOpt = supportTicketAssignmentRepository.findByTicketAndSupportUser(ticket, currentUser);
             if (assignmentOpt.isPresent()) {
                 SupportTicketAssignment assignment = assignmentOpt.get();
+                System.out.println("[DEBUG_LOG] Found assignment for support user " + currentUser.getUsername() + ", old lastViewed: " + assignment.getLastViewed());
                 assignment.updateLastViewed();
                 supportTicketAssignmentRepository.save(assignment);
+                supportTicketAssignmentRepository.flush(); // Ensure changes are immediately persisted
+                System.out.println("[DEBUG_LOG] Updated lastViewed for support user " + currentUser.getUsername() + ", new lastViewed: " + assignment.getLastViewed());
+            } else {
+                System.out.println("[DEBUG_LOG] No assignment found for support user " + currentUser.getUsername() + " and ticket " + ticket.getTicketId());
             }
+        }
+        // Update lastViewed for ENDUSER if they own the ticket
+        else if (currentUser.getRole() == Role.ENDUSER && ticket.getEndUser().equals(currentUser)) {
+            UserTicket userTicket = userTicketRepository
+                    .findByTicketAndEndUser(ticket, currentUser)
+                    .orElseGet(() -> new UserTicket(ticket, currentUser));
+            userTicket.updateLastViewed();
+            userTicketRepository.save(userTicket);
+            userTicketRepository.flush(); // Ensure changes are immediately persisted
         }
 
         // Fetch comments for the ticket within the transaction
@@ -637,7 +642,7 @@ public class TicketService {
      * @return list of tickets assigned to current support user
      * @throws IllegalArgumentException if user not found or not authorized
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<TicketListItemResponse> getMySupportTickets(String search, TicketState state, TicketCategory category,
                                                            String sort, String direction, Authentication authentication) {
         UserAccount currentUser = getCurrentUser(authentication);

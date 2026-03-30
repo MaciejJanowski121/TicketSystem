@@ -13,7 +13,9 @@ import {
   Key, 
   LogOut,
   Ticket as TicketIcon,
-  BookOpen
+  BookOpen,
+  Menu,
+  X
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -22,6 +24,7 @@ function Sidebar() {
   const [username, setUsername] = useState('');
   const [userRole, setUserRole] = useState('');
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,6 +70,14 @@ function Sidebar() {
     setShowAccountDropdown(!showAccountDropdown);
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -85,164 +96,194 @@ function Sidebar() {
   }, [showAccountDropdown]);
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <NavLink to="/" className="sidebar-brand">
-          <div className="brand-icon">
-            <TicketIcon size={20} />
-          </div>
-          <span className="brand-text">TicketSystem</span>
-        </NavLink>
-      </div>
+    <>
+      {/* Mobile Menu Button */}
+      <button 
+        className="mobile-menu-button"
+        onClick={toggleMobileMenu}
+        aria-label="Toggle mobile menu"
+      >
+        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
 
-      <nav className="sidebar-nav">
-        <NavLink 
-          to="/" 
-          className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-        >
-          <span className="nav-icon">
-            <Home size={18} />
-          </span>
-          <span className="nav-text">Startseite</span>
-        </NavLink>
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="mobile-overlay"
+          onClick={closeMobileMenu}
+        />
+      )}
 
-        {!userLoggedIn && (
-          <>
-            <NavLink 
-              to="/login" 
-              className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <span className="nav-icon">
-                <LogIn size={18} />
-              </span>
-              <span className="nav-text">Anmelden</span>
-            </NavLink>
-            <NavLink 
-              to="/register" 
-              className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <span className="nav-icon">
-                <UserPlus size={18} />
-              </span>
-              <span className="nav-text">Registrieren</span>
-            </NavLink>
-          </>
-        )}
+      <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <NavLink to="/" className="sidebar-brand" onClick={closeMobileMenu}>
+            <div className="brand-icon">
+              <TicketIcon size={20} />
+            </div>
+            <span className="brand-text">TicketSystem</span>
+          </NavLink>
+        </div>
 
-        {userLoggedIn && userRole === 'ENDUSER' && (
-          <>
+        <nav className="sidebar-nav">
+          <NavLink 
+            to="/" 
+            className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+            onClick={closeMobileMenu}
+          >
+            <span className="nav-icon">
+              <Home size={18} />
+            </span>
+            <span className="nav-text">Startseite</span>
+          </NavLink>
+
+          {!userLoggedIn && (
+            <>
+              <NavLink 
+                to="/login" 
+                className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+                onClick={closeMobileMenu}
+              >
+                <span className="nav-icon">
+                  <LogIn size={18} />
+                </span>
+                <span className="nav-text">Anmelden</span>
+              </NavLink>
+              <NavLink 
+                to="/register" 
+                className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+                onClick={closeMobileMenu}
+              >
+                <span className="nav-icon">
+                  <UserPlus size={18} />
+                </span>
+                <span className="nav-text">Registrieren</span>
+              </NavLink>
+            </>
+          )}
+
+          {userLoggedIn && userRole === 'ENDUSER' && (
+            <>
+              <NavLink 
+                to="/tickets" 
+                className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+                onClick={closeMobileMenu}
+              >
+                <span className="nav-icon">
+                  <Ticket size={18} />
+                </span>
+                <span className="nav-text">Tickets</span>
+              </NavLink>
+              <NavLink 
+                to="/tickets/new" 
+                className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+                onClick={closeMobileMenu}
+              >
+                <span className="nav-icon">
+                  <Plus size={18} />
+                </span>
+                <span className="nav-text">Ticket erstellen</span>
+              </NavLink>
+            </>
+          )}
+
+          {userLoggedIn && (userRole === 'SUPPORTUSER' || userRole === 'ADMINUSER') && (
             <NavLink 
               to="/tickets" 
               className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+              onClick={closeMobileMenu}
             >
               <span className="nav-icon">
                 <Ticket size={18} />
               </span>
               <span className="nav-text">Tickets</span>
             </NavLink>
+          )}
+
+          {userLoggedIn && userRole === 'ADMINUSER' && (
             <NavLink 
-              to="/tickets/new" 
+              to="/admin/users" 
               className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+              onClick={closeMobileMenu}
             >
               <span className="nav-icon">
-                <Plus size={18} />
+                <Users size={18} />
               </span>
-              <span className="nav-text">Ticket erstellen</span>
+              <span className="nav-text">Benutzerverwaltung</span>
             </NavLink>
-          </>
-        )}
+          )}
 
-        {userLoggedIn && (userRole === 'SUPPORTUSER' || userRole === 'ADMINUSER') && (
           <NavLink 
-            to="/tickets" 
+            to="/wiki" 
             className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+            onClick={closeMobileMenu}
           >
             <span className="nav-icon">
-              <Ticket size={18} />
+              <BookOpen size={18} />
             </span>
-            <span className="nav-text">Tickets</span>
+            <span className="nav-text">Hilfe & Erklärung</span>
           </NavLink>
-        )}
+        </nav>
 
-        {userLoggedIn && userRole === 'ADMINUSER' && (
-          <NavLink 
-            to="/admin/users" 
-            className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">
-              <Users size={18} />
-            </span>
-            <span className="nav-text">Benutzerverwaltung</span>
-          </NavLink>
-        )}
-
-        <NavLink 
-          to="/wiki" 
-          className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
-        >
-          <span className="nav-icon">
-            <BookOpen size={18} />
-          </span>
-          <span className="nav-text">Hilfe & Erklärung</span>
-        </NavLink>
-      </nav>
-
-      {userLoggedIn && (
-        <div className="sidebar-footer">
-          <div className="account-dropdown-container">
-            <div 
-              className="user-info"
-              onClick={toggleAccountDropdown}
-              aria-expanded={showAccountDropdown}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  toggleAccountDropdown();
-                }
-              }}
-            >
-              <div className="user-avatar">
-                {username ? username.charAt(0).toUpperCase() : 'U'}
+        {userLoggedIn && (
+          <div className="sidebar-footer">
+            <div className="account-dropdown-container">
+              <div 
+                className="user-info"
+                onClick={toggleAccountDropdown}
+                aria-expanded={showAccountDropdown}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleAccountDropdown();
+                  }
+                }}
+              >
+                <div className="user-avatar">
+                  {username ? username.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="user-details">
+                  <span className="username">{username}</span>
+                  <span className="user-role">
+                    {userRole === 'ENDUSER' ? 'Benutzer' : 
+                     userRole === 'SUPPORTUSER' ? 'Support' : 
+                     userRole === 'ADMINUSER' ? 'Admin' : userRole}
+                  </span>
+                </div>
               </div>
-              <div className="user-details">
-                <span className="username">{username}</span>
-                <span className="user-role">
-                  {userRole === 'ENDUSER' ? 'Benutzer' : 
-                   userRole === 'SUPPORTUSER' ? 'Support' : 
-                   userRole === 'ADMINUSER' ? 'Admin' : userRole}
-                </span>
-              </div>
+
+              {showAccountDropdown && (
+                <div className="account-dropdown">
+                  <NavLink 
+                    to="/change-password" 
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowAccountDropdown(false);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <span className="dropdown-icon">
+                      <Key size={16} />
+                    </span>
+                    Passwort ändern
+                  </NavLink>
+                  <button 
+                    onClick={handleLogout} 
+                    className="dropdown-item logout-item"
+                  >
+                    <span className="dropdown-icon">
+                      <LogOut size={16} />
+                    </span>
+                    Abmelden
+                  </button>
+                </div>
+              )}
             </div>
-
-            {showAccountDropdown && (
-              <div className="account-dropdown">
-                <NavLink 
-                  to="/change-password" 
-                  className="dropdown-item"
-                  onClick={() => setShowAccountDropdown(false)}
-                >
-                  <span className="dropdown-icon">
-                    <Key size={16} />
-                  </span>
-                  Passwort ändern
-                </NavLink>
-                <button 
-                  onClick={handleLogout} 
-                  className="dropdown-item logout-item"
-                >
-                  <span className="dropdown-icon">
-                    <LogOut size={16} />
-                  </span>
-                  Abmelden
-                </button>
-              </div>
-            )}
           </div>
-        </div>
-      )}
-    </aside>
+        )}
+      </aside>
+    </>
   );
 }
 

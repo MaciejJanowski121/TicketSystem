@@ -118,7 +118,7 @@ function CreateTicketPage() {
 
         // Navigate to the newly created ticket details page
         setTimeout(() => {
-          navigate(`/my-tickets/${data.ticketId}`);
+          navigate(`/tickets/${data.ticketId}`);
         }, 2000);
       } else {
         setIsSuccess(false);

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import HomePage from './pages/HomePage'
 import WikiPage from './pages/WikiPage'
@@ -6,8 +6,6 @@ import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
 import ChangePasswordPage from './pages/ChangePasswordPage'
 import CreateTicketPage from './pages/CreateTicketPage'
-import MyTicketDetailPage from './pages/MyTicketDetailPage'
-import TicketsOverviewPage from './pages/TicketsOverviewPage'
 import EndUserTicketsPage from './pages/EndUserTicketsPage'
 import TicketDetailsReadOnlyPage from './pages/TicketDetailsReadOnlyPage'
 import SupportTicketsPage from './pages/SupportTicketsPage'
@@ -24,7 +22,8 @@ function TicketsPageWrapper() {
   } else if (currentUser?.role === 'SUPPORTUSER' || currentUser?.role === 'ADMINUSER') {
     return <SupportTicketsPage />;
   } else {
-    return <TicketsOverviewPage />;
+    // Redirect to login for users without valid roles
+    return <Navigate to="/login" replace />;
   }
 }
 
@@ -43,7 +42,6 @@ function App() {
             <Route path="/tickets" element={<TicketsPageWrapper />} />
             <Route path="/tickets/:ticketId" element={<TicketDetailsReadOnlyPage />} />
             <Route path="/tickets/new" element={<CreateTicketPage />} />
-            <Route path="/my-tickets/:ticketId" element={<MyTicketDetailPage />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
           </Routes>
         </main>

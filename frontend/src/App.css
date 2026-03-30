@@ -8,13 +8,29 @@
 /* Main content */
 .main-content {
   flex: 1;
-  margin-top: 80px; /* Account for fixed navbar */
-  padding: 2rem 0;
+  margin-left: 280px; /* Account for sidebar width */
+  padding: 2rem;
+  transition: margin-left 0.3s ease;
 }
 
 /* Responsive design for main content */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 260px; /* Account for smaller sidebar on tablet */
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; /* No sidebar margin on mobile */
+    padding: 1rem;
+    padding-top: 5rem; /* Account for mobile menu button */
+  }
+}
+
 @media (max-width: 480px) {
   .main-content {
-    margin-top: 120px; /* Account for taller navbar on mobile */
+    padding: 0.75rem;
+    padding-top: 5rem;
   }
 }

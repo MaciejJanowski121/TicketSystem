@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getToken, getAuthHeader, isLoggedIn, getCurrentUser } from '../utils/auth';
 import { API_BASE_URL } from '../utils/config';
-import './MyTicketsPage.css';
+import './EndUserTicketsPage.css';
 
 function EndUserTicketsPage() {
   const [activeTab, setActiveTab] = useState('meine');
@@ -84,8 +84,31 @@ function EndUserTicketsPage() {
       return;
     }
 
-    fetchMyTickets();
+    // fetchMyTickets() will be called by the activeTab useEffect
   }, [navigate]);
+
+  // Refresh ticket list when switching to "meine" tab or when returning to the page
+  useEffect(() => {
+    if (activeTab === 'meine') {
+      fetchMyTickets();
+    }
+  }, [activeTab]);
+
+  // Refresh ticket list when user returns to this page (e.g., after viewing a ticket)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && activeTab === 'meine') {
+        fetchMyTickets();
+      }
+    };
+
+    // Listen for when the page becomes visible (user switches back to this tab)
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeTab]);
 
   useEffect(() => {
     // Fetch all tickets when switching to "alle" tab
@@ -233,15 +256,8 @@ function EndUserTicketsPage() {
   };
 
   const handleTicketClick = (ticketId) => {
-    if (activeTab === 'meine') {
-      navigate(`/my-tickets/${ticketId}`);
-      // Refresh the ticket list after a short delay to reflect lastViewed update
-      setTimeout(() => {
-        fetchMyTickets();
-      }, 100);
-    } else {
-      navigate(`/tickets/${ticketId}`);
-    }
+    // Always navigate to unified ticket detail route
+    navigate(`/tickets/${ticketId}`);
   };
 
   if (isLoading) {
